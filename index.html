@@ -1,0 +1,1494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Divisonal Charts Analyzer</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+
+
+
+
+
+
+<style>
+/* =========================================================
+   EMERALD MATRIX × EGYPTIAN TEMPLE
+   (SINGLE THEME — FULL REPLACEMENT)
+   ========================================================= */
+
+:root{
+  /* BACKGROUND */
+  --bg-main:
+    radial-gradient(circle at top,#022c22 0%,#000000 70%);
+
+  /* PANELS */
+  --panel:#021b16;
+
+  /* BORDERS */
+  --border:#10b981;
+  --soft:#064e3b;
+
+  /* TEXT */
+  --text:#ecfdf5;
+
+  /* ACCENT (HIEROGLYPH GOLD) */
+  --accent:#d4af37;
+
+  /* GLOW (SUBTLE TEMPLE AURA) */
+  --glow:0 0 14px rgba(16,185,129,.45);
+}
+
+body{
+  background:var(--bg-main);
+  color:var(--text);
+  font-family:Segoe UI,Arial,sans-serif;
+  padding:20px;
+}
+
+/* HEADINGS */
+h2{
+  text-align:center;
+  color:var(--accent);
+  letter-spacing:2.5px;
+  text-shadow:0 0 10px rgba(212,175,55,.45);
+}
+
+/* TABLES */
+table{
+  width:100%;
+  border-collapse:collapse;
+  background:var(--panel);
+  border:1px solid var(--border);
+  box-shadow:var(--glow);
+  margin-top:16px;
+}
+
+th,td{
+  border:1px solid var(--soft);
+  padding:8px;
+  text-align:center;
+}
+
+/* TABLE HEADER */
+th{
+  background:linear-gradient(
+    180deg,
+    #064e3b,
+    #021b16
+  );
+  color:#fef3c7;
+  font-weight:900;
+  letter-spacing:.5px;
+}
+
+/* INPUTS */
+input,select{
+  background:#021b16;
+  color:#ecfdf5;
+  border:1px solid var(--border);
+  border-radius:6px;
+  padding:6px 10px;
+  font-weight:800;
+  text-align:center;
+  box-shadow:inset 0 0 6px rgba(16,185,129,.35);
+}
+
+
+input:disabled{
+  opacity:.45;
+}
+
+/* BUTTONS */
+button{
+  background:linear-gradient(
+    135deg,
+    #10b981,
+    #d4af37
+  );
+  border:none;
+  color:#021b16;
+  padding:8px 16px;
+  font-weight:900;
+  cursor:pointer;
+  box-shadow:0 0 14px rgba(16,185,129,.55);
+  margin:6px;
+  letter-spacing:.6px;
+}
+
+button:hover{
+  background:linear-gradient(
+    135deg,
+    #34d399,
+    #facc15
+  );
+}
+
+/* CONTROL ROW */
+.controls{
+  text-align:center;
+  margin-top:18px;
+}
+
+/* SEPARATORS */
+hr{
+  border:none;
+  height:1px;
+  background:linear-gradient(
+    90deg,
+    transparent,
+    var(--accent),
+    transparent
+  );
+  margin:22px 0;
+}
+
+/* SOUTH INDIAN KUNDALI */
+#siKundali{
+  background:#021b16;
+  border:2px solid var(--border);
+  box-shadow:0 0 26px rgba(16,185,129,.55);
+}
+
+.siCell{
+  border:1px solid var(--soft);
+}
+
+.siCenter{
+  background:#010a08;
+}
+
+.siSign{
+  color:var(--accent);
+}
+
+.siHouse{
+  color:#fef3c7;
+}
+
+
+
+
+
+
+
+
+
+
+/* =========================================================
+   PIVOT BAR — EMERALD EGYPTIAN STYLE
+   ========================================================= */
+.pivotBar{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:14px;
+  flex-wrap:wrap;
+  margin-bottom:16px;
+  padding:10px 14px;
+  background:linear-gradient(
+    180deg,
+    #021b16,
+    #010a08
+  );
+  border:1px solid var(--border);
+  border-radius:10px;
+  box-shadow:0 0 16px rgba(16,185,129,.45);
+  font-weight:900;
+  color:var(--accent);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* =========================================================
+   MODE TOGGLES — TEMPLE SWITCHES
+   ========================================================= */
+.pivotBar label{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  cursor:pointer;
+}
+
+.pivotBar input[type="checkbox"]{
+  accent-color:#10b981;
+  transform:scale(1.1);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* =========================================
+   COUNTER TABLE – SOLID RED SELECTION
+   ========================================= */
+#counterTable tr.selectedRow{
+  background: #7f1d1d;          /* solid blood red */
+}
+
+#counterTable tr.selectedRow td{
+  color: #ffffff;
+  font-weight: 900;
+}
+
+
+
+
+/* =========================================
+   KUNDALI RASI – SOLID RED MARKER
+   ========================================= */
+.siCell.selectedRasi{
+  background: #991b1b;   /* dark solid red */
+  border: 2px solid #7f1d1d;
+}
+
+
+
+
+
+/* =========================================
+   KUNDALI RASI – CLICK HIGHLIGHT
+   ========================================= */
+.siCell.selectedRasi{
+  background: radial-gradient(
+    circle at center,
+    rgba(16,185,129,0.35),
+    rgba(1,10,8,0.95)
+  );
+  box-shadow: inset 0 0 22px rgba(16,185,129,0.65);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+/* =========================================
+   COUNTER TABLE – CLICK HIGHLIGHT
+   ========================================= */
+#counterTable tr.selectedRow{
+  background: linear-gradient(
+    135deg,
+    rgba(16,185,129,0.35),
+    rgba(2,27,22,0.95)
+  );
+  box-shadow: inset 0 0 18px rgba(16,185,129,0.6);
+}
+
+#counterTable tr.selectedRow td{
+  color:#ecfdf5;
+  font-weight:900;
+}
+
+
+
+
+
+
+
+
+</style>
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body>
+
+<h2>DIVISIONAL CHARTS ANALYZER</h2>
+
+<!-- =========================
+     PERSON NAME
+     ========================= -->
+<div style="text-align:center;margin-bottom:12px;font-weight:700">
+Person Name :
+<input id="personName"
+  placeholder="ENTER NAME (MAX 20 CHARS)"
+  maxlength="20"
+  oninput="this.value=this.value
+    .toUpperCase()
+    .replace(/[^A-Z0-9\s]/g,'')">
+
+</div>
+
+<!-- =========================
+     IGNORE MIN / SEC
+     ========================= -->
+
+
+<div style="text-align:center;font-weight:700">
+  <label style="margin-right:14px">
+    <input type="checkbox" id="ignoreMin" checked>
+    Ignore Minutes
+  </label>
+
+  <label>
+    <input type="checkbox" id="ignoreSec" checked>
+    Ignore Seconds
+  </label>
+</div>
+
+
+
+
+
+<!-- =========================
+     INPUT TABLE
+     ========================= -->
+<table id="inputTable">
+<tr>
+  <th>Planet / Lagna</th>
+  <th>Sign</th>
+  <th>Deg</th>
+  <th>Min</th>
+  <th>Sec</th>
+</tr>
+</table>
+
+<!-- =========================
+     ACTION BUTTONS
+     ========================= -->
+<div class="controls">
+  <button onclick="buildChart()">Build Chart</button>
+  <button onclick="saveJSON()">Save</button>
+  <button onclick="loadJSON()">Load</button>
+  <button onclick="clearAll()">Clear All</button>
+</div>
+
+<script>
+/* =========================================================
+   CONSTANTS
+   ========================================================= */
+const signs=["","Aries","Taurus","Gemini","Cancer","Leo","Virgo",
+             "Libra","Scorpio","Sagittarius","Capricorn","Aquarius","Pisces"];
+
+const planets=[
+  "Lagna",
+  "Surya","Chandra","Mangala","Rahu",
+  "Jupiter","Saturn","Budha","Ketu","Venus"
+];
+
+/* =========================================================
+   BUILD INPUT TABLE
+   ========================================================= */
+const table=document.getElementById("inputTable");
+
+function buildRow(name){
+  let r=table.insertRow();
+  r.insertCell().innerHTML="<b>"+name+"</b>";
+
+  let s=r.insertCell();
+  let sel=document.createElement("select");
+  sel.id=name+"_sign";
+  signs.forEach(x=>{
+    let o=document.createElement("option");
+    o.value=o.text=x;
+    sel.appendChild(o);
+  });
+  s.appendChild(sel);
+
+  ["deg","min","sec"].forEach(k=>{
+    let c=r.insertCell();
+    let i=document.createElement("input");
+    i.id=name+"_"+k;
+    i.maxLength=2;
+    i.oninput=()=>jumpLogic(i,k);
+    c.appendChild(i);
+  });
+}
+
+planets.forEach(buildRow);
+
+/* =========================================================
+   AUTO JUMP LOGIC
+   ========================================================= */
+   
+   
+   
+function jumpLogic(inp,type){
+  inp.value = inp.value.replace(/\D/g,"");
+
+  let max = (type === "deg") ? 29 : 59;
+  let val = inp.value === "" ? 0 : parseInt(inp.value,10);
+  if(val > max) val = max;
+  inp.value = val;
+
+  if(inp.value.length < 2) return;
+
+  let [p,k] = inp.id.split("_");
+  let order = [...planets];
+  let idx = order.indexOf(p);
+
+  if(k === "deg"){
+    if(!ignoreMin.checked){
+      document.getElementById(p+"_min").focus();
+    }else if(!ignoreSec.checked){
+      document.getElementById(p+"_sec").focus();
+    }else if(order[idx+1]){
+      document.getElementById(order[idx+1]+"_deg").focus();
+    }
+  }
+
+  else if(k === "min"){
+    if(!ignoreSec.checked){
+      document.getElementById(p+"_sec").focus();
+    }else if(order[idx+1]){
+      document.getElementById(order[idx+1]+"_deg").focus();
+    }
+  }
+
+  else if(k === "sec"){
+    if(order[idx+1]){
+      document.getElementById(order[idx+1]+"_deg").focus();
+    }
+  }
+}
+
+
+
+
+
+
+
+
+/* =========================================================
+   ARROW KEY INCREMENT / DECREMENT
+   ========================================================= */
+document.addEventListener("keydown", function(e){
+
+  let el = document.activeElement;
+  if(!el || el.tagName !== "INPUT") return;
+  if(!el.id) return;
+
+  if(!el.id.endsWith("_deg") &&
+     !el.id.endsWith("_min") &&
+     !el.id.endsWith("_sec")) return;
+
+  let type = el.id.split("_")[1];
+  let max = (type === "deg") ? 29 : 59;
+
+  let val = parseInt(el.value || "0",10);
+
+  if(e.key === "ArrowUp"){
+    e.preventDefault();
+    if(val < max) el.value = val + 1;
+  }
+
+  if(e.key === "ArrowDown"){
+    e.preventDefault();
+    if(val > 0) el.value = val - 1;
+  }
+});
+
+
+
+
+
+
+
+
+/* =========================================================
+   IGNORE MS TOGGLE
+   ========================================================= */
+function syncIgnoreFields(){
+
+  planets.forEach(p=>{
+
+    let min = document.getElementById(p+"_min");
+    let sec = document.getElementById(p+"_sec");
+
+    min.disabled = ignoreMin.checked;
+    sec.disabled = ignoreSec.checked;
+
+    if(ignoreMin.checked) min.value = "0";
+    if(ignoreSec.checked) sec.value = "0";
+  });
+}
+
+ignoreMin.onchange = syncIgnoreFields;
+ignoreSec.onchange = syncIgnoreFields;
+
+/* initial sync */
+syncIgnoreFields();
+
+
+
+
+
+
+
+/* =========================================================
+   ACTION PLACEHOLDERS
+   ========================================================= */
+function buildChart(){
+  redrawAll();
+}
+
+
+/* =========================================================
+   SAVE / LOAD / CLEAR
+   ========================================================= */
+function saveJSON(){
+  let data={ personName:personName.value, entities:{} };
+  planets.forEach(p=>{
+    data.entities[p]={
+      sign:document.getElementById(p+"_sign").value,
+      deg:document.getElementById(p+"_deg").value,
+      min:document.getElementById(p+"_min").value,
+      sec:document.getElementById(p+"_sec").value
+    };
+  });
+  let blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+  let a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download=(data.personName||"kundali")+".json";
+  a.click();
+}
+
+function loadJSON(){
+  let f=document.createElement("input");
+  f.type="file"; f.accept="application/json";
+  f.onchange=e=>{
+    let r=new FileReader();
+    r.onload=()=>{
+      let d=JSON.parse(r.result);
+      personName.value=d.personName||"";
+      Object.keys(d.entities||{}).forEach(p=>{
+        let o=d.entities[p];
+        document.getElementById(p+"_sign").value=o.sign;
+        document.getElementById(p+"_deg").value=o.deg;
+        document.getElementById(p+"_min").value=o.min;
+        document.getElementById(p+"_sec").value=o.sec;
+      });
+    };
+    r.readAsText(e.target.files[0]);
+  };
+  f.click();
+}
+
+function clearAll(){
+  personName.value="";
+  planets.forEach(p=>{
+    document.getElementById(p+"_sign").selectedIndex=0;
+    document.getElementById(p+"_deg").value="";
+    document.getElementById(p+"_min").value="";
+    document.getElementById(p+"_sec").value="";
+  });
+}
+</script>
+
+
+
+
+
+
+
+
+
+<!-- =========================================================
+     PART 2 : SOUTH INDIAN KUNDALI (CENTERED + PIVOT)
+     ========================================================= -->
+
+<hr>
+
+<h2 style="text-align:center">SOUTH INDIAN KUNDALI</h2>
+
+<!-- =========================
+     PIVOT CONTROL
+     ========================= -->
+<div class="pivotBar">
+
+
+  <span>Pivot :</span>
+
+  <select id="kundaliPivot"></select>
+
+	<label>
+	  <input type="checkbox" id="sign2signMode">
+	  Sign-to-Sign
+	</label>
+
+	<label>
+	  <input type="checkbox" id="kpMode">
+	  KP (0°)
+	</label>
+
+	<label>
+	  <input type="checkbox" id="vedicMode" checked>
+		Vedic (15°)
+	</label>
+
+
+</div>
+
+<!-- =========================
+     KUNDALI WRAPPER (CENTER)
+     ========================= -->
+<div style="display:flex;justify-content:center">
+  <div id="siKundali"></div>
+</div>
+
+
+
+
+<style>
+/* =========================================================
+   SOUTH INDIAN KUNDALI STYLE
+   EMERALD MATRIX × EGYPTIAN (OVERRIDES OLD FIRE)
+   ========================================================= */
+
+#siKundali{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  grid-template-rows:repeat(4,1fr);
+  width:520px;
+  aspect-ratio:1/1;
+  background:var(--panel);
+  border:2px solid var(--border);
+  box-shadow:0 0 26px rgba(16,185,129,.55);
+}
+
+.siCell{
+  border:1px solid var(--soft);
+  padding:10px;
+  position:relative;
+  font-size:13px;
+}
+
+.siCenter{
+  background:#010a08;
+}
+
+.siSign{
+  position:absolute;
+  bottom:4px;
+  right:6px;
+  font-size:13px;
+  font-weight:800;
+  color:var(--accent);
+}
+
+.siHouse{
+  position:absolute;
+  top:4px;
+  left:6px;
+  font-size:14px;
+  font-weight:900;
+  color:#fef3c7;
+}
+
+.siList{
+  margin-top:18px;
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+  white-space:nowrap;
+}
+</style>
+
+
+
+
+
+
+
+<script>
+/* =========================================================
+   SOUTH INDIAN SIGN LAYOUT (FIXED)
+   (MATCHES YOUR ORIGINAL PROJECT)
+   ========================================================= */
+const SI_SIGNS = [
+  "Pisces","Aries","Taurus","Gemini",
+  "Aquarius","","","Cancer",
+  "Capricorn","","","Leo",
+  "Sagittarius","Scorpio","Libra","Virgo"
+];
+
+/* =========================================================
+   BUILD PIVOT DROPDOWN
+   ========================================================= */
+(function(){
+  let sel = document.getElementById("kundaliPivot");
+  sel.innerHTML="";
+  ["Lagna","Surya","Chandra","Mangala","Rahu",
+   "Jupiter","Saturn","Budha","Ketu","Venus"].forEach(p=>{
+    let o=document.createElement("option");
+    o.value=o.text=p;
+    sel.appendChild(o);
+  });
+  sel.value="Lagna";
+})();
+
+/* =========================================================
+   INIT SOUTH INDIAN KUNDALI
+   ========================================================= */
+function initSIKundali(){
+  let g=document.getElementById("siKundali");
+  g.innerHTML="";
+  SI_SIGNS.forEach(s=>{
+    if(s===""){
+      g.innerHTML+=`<div class="siCell siCenter"></div>`;
+    }else{
+      g.innerHTML+=`
+      <div class="siCell" data-sign="${s}">
+        <div class="siHouse"></div>
+        <div class="siList"></div>
+        <div class="siSign">${s}</div>
+      </div>`;
+    }
+  });
+}
+
+/* =========================================================
+   GET ABSOLUTE DEGREE (FROM PART-1)
+   ========================================================= */
+
+
+
+function getAbsDeg(entity){
+  let sign = document.getElementById(entity+"_sign").value;
+  let signIndex = signs.indexOf(sign);
+  if(signIndex <= 0) return null;
+
+  let deg = +document.getElementById(entity+"_deg").value || 0;
+  let min = +document.getElementById(entity+"_min").value || 0;
+  let sec = +document.getElementById(entity+"_sec").value || 0;
+
+  return (signIndex - 1) * 30 + deg + min/60 + sec/3600;
+}
+
+
+
+
+
+
+
+
+
+function getGlobalOffset(){
+
+  if(!kpMode.checked && !vedicMode.checked){
+    return 0;
+  }
+
+  let pivot = document.getElementById("kundaliPivot").value;
+  let pivotAbs = getAbsDeg(pivot);
+  if(pivotAbs === null) return 0;
+
+  let pivotDeg = pivotAbs % 30;
+
+  /* KP → pivot becomes 0° */
+  if(kpMode.checked){
+    return -pivotDeg;
+  }
+
+  /* VEDIC → pivot becomes 15° */
+  if(vedicMode.checked){
+    return 15 - pivotDeg;
+  }
+
+  return 0;
+}
+
+
+
+/* =========================================
+   KUNDALI RASI SELECTION MEMORY
+   (MULTI SELECT – UNTIL RELOAD)
+   ========================================= */
+window.__selectedRasis = new Set();
+
+
+
+
+
+
+
+
+/* =========================================================
+   DRAW SOUTH INDIAN KUNDALI (PIVOT BASED)
+   ========================================================= */
+function drawSIKundali(){
+
+  initSIKundali();
+
+  let pivot = document.getElementById("kundaliPivot").value;
+  let pivotSign = document.getElementById(pivot+"_sign").value;
+  let pivotAbs  = getAbsDeg(pivot);
+
+  if(!pivotSign || pivotAbs===null) return;
+
+
+
+
+
+/* =========================
+   ASSIGN HOUSE NUMBERS (CORRECT SOUTH INDIAN CYCLIC)
+   ========================= */
+
+/* Zodiac order for house calculation */
+const ZODIAC_ORDER = [
+  "Aries","Taurus","Gemini","Cancer",
+  "Leo","Virgo","Libra","Scorpio",
+  "Sagittarius","Capricorn","Aquarius","Pisces"
+];
+
+let cells = [...document.querySelectorAll("#siKundali .siCell[data-sign]")];
+
+
+/* =========================================
+   RESTORE + TOGGLE RASI HIGHLIGHT (MULTI)
+   ========================================= */
+cells.forEach(cell => {
+
+  let sign = cell.dataset.sign;
+
+  /* restore after redraw */
+  if(window.__selectedRasis.has(sign)){
+    cell.classList.add("selectedRasi");
+  }
+
+  /* click toggle */
+  cell.addEventListener("click", () => {
+
+    if(window.__selectedRasis.has(sign)){
+      window.__selectedRasis.delete(sign);
+      cell.classList.remove("selectedRasi");
+    }else{
+      window.__selectedRasis.add(sign);
+      cell.classList.add("selectedRasi");
+    }
+
+  });
+
+});
+
+
+
+
+
+
+
+/* find Lagna sign index in zodiac */
+let lagnaZodiacIndex = ZODIAC_ORDER.indexOf(pivotSign);
+if(lagnaZodiacIndex === -1) return;
+
+/* assign houses cyclically */
+cells.forEach(cell => {
+
+  let sign = cell.dataset.sign;
+  let signZodiacIndex = ZODIAC_ORDER.indexOf(sign);
+  if(signZodiacIndex === -1) return;
+
+  let house =
+    (signZodiacIndex - lagnaZodiacIndex + 12) % 12 + 1;
+
+  cell.querySelector(".siHouse").textContent = house;
+});
+
+
+
+
+
+
+
+
+
+/* ===== FINAL LAGNA-BASED DEGREE SHIFT (SINGLE SOURCE) ===== */
+
+let offset = getGlobalOffset();
+
+
+
+
+
+
+
+
+
+
+/* ===== SIGN-WISE ORDERED PLANET PLACEMENT ===== */
+
+let buckets = {};
+
+/* 1️⃣ COLLECT PLANETS INTO SIGN BUCKETS */
+[
+ "Lagna","Surya","Chandra","Mangala","Rahu",
+ "Jupiter","Saturn","Budha","Ketu","Venus"
+].forEach(label => {
+
+  let rawAbs = getAbsDeg(label);
+  if(rawAbs === null) return;
+
+  let shiftedAbs = rawAbs + offset;
+  shiftedAbs = ((shiftedAbs % 360) + 360) % 360;
+
+  let signIndex = Math.floor(shiftedAbs / 30);
+  let sign = signs[signIndex + 1];
+  if(!sign) return;
+
+  let degInSign;
+  if(label === "Lagna" && kpMode.checked){
+    degInSign = 0;
+  }else if(label === "Lagna" && vedicMode.checked){
+    degInSign = 15;
+  }else{
+    degInSign = Math.floor(shiftedAbs % 30);
+  }
+
+  if(!buckets[sign]){
+    buckets[sign] = [];
+  }
+
+  buckets[sign].push({
+    label,
+    deg: degInSign,
+    signIndex
+  });
+});
+
+/* 2️⃣ SORT + RENDER */
+Object.keys(buckets).forEach(sign => {
+
+  let list = buckets[sign];
+  let signIndex = list[0].signIndex;
+
+  /* Aries → Virgo : ASCENDING */
+  if(signIndex <= 5){
+    list.sort((a,b) => a.deg - b.deg);
+  }
+  /* Libra → Pisces : DESCENDING */
+  else{
+    list.sort((a,b) => b.deg - a.deg);
+  }
+
+  let cell = cells.find(c => c.dataset.sign === sign);
+  if(!cell) return;
+
+  list.forEach(p => {
+    let d = document.createElement("div");
+    d.textContent = `${p.label} ${p.deg}°`;
+    cell.querySelector(".siList").appendChild(d);
+  });
+});
+
+   
+}
+
+/* =========================================================
+   AUTO REFRESH HOOKS
+   ========================================================= */
+document.getElementById("kundaliPivot").onchange = drawSIKundali;
+
+["Lagna","Surya","Chandra","Mangala","Rahu",
+ "Jupiter","Saturn","Budha","Ketu","Venus"].forEach(p=>{
+  ["sign","deg","min","sec"].forEach(k=>{
+    let el=document.getElementById(p+"_"+k);
+    if(el){
+      el.addEventListener("change", drawSIKundali);
+      el.addEventListener("input", drawSIKundali);
+    }
+  });
+});
+
+/* Initial draw */
+drawSIKundali();
+</script>
+
+
+
+
+
+
+
+
+
+
+
+<!-- =========================================================
+     PART 3 : COUNTER TABLE (FORWARD + RETRO)
+     ========================================================= -->
+
+<hr>
+
+<h2 style="text-align:center">PLANET COUNTER TABLE</h2>
+
+<div style="display:flex;justify-content:center">
+  <table id="counterTable" style="max-width:520px">
+    <tr>
+      <th>Planet</th>
+      <th>Forward</th>
+      <th>Retro</th>
+    </tr>
+  </table>
+</div>
+
+<script>
+
+
+
+
+
+
+
+
+
+
+/* =========================================================
+   HOUSE FROM PIVOT (GENERAL KUNDALI LOGIC)
+   ========================================================= */
+
+
+
+
+
+
+
+function getHouseFromPivot(entity){
+
+  let pivot = document.getElementById("kundaliPivot").value;
+
+  let pivotAbs = getAbsDeg(pivot);
+  let entAbs   = getAbsDeg(entity);
+
+  if(pivotAbs === null || entAbs === null) return 1;
+
+  /* =========================================
+     MODE 1 : SIGN-TO-SIGN (DEGREELESS)
+     ========================================= */
+  if(sign2signMode.checked){
+    let pSign = Math.floor(pivotAbs / 30);
+    let eSign = Math.floor(entAbs / 30);
+    let house = eSign - pSign + 1;
+    if(house <= 0) house += 12;
+    return house;
+  }
+
+  /* =========================================
+     MODE 2 : KP (0° BHAVA)
+     ========================================= */
+  if(kpMode.checked){
+
+    let pivotDeg = pivotAbs % 30;
+    let offset   = -pivotDeg;
+
+    let p = (pivotAbs + offset + 360) % 360;
+    let e = (entAbs   + offset + 360) % 360;
+
+    let diff = e - p;
+    if(diff < 0) diff += 360;
+
+    let house = Math.floor(diff / 30) + 1;
+    if(house > 12) house -= 12;
+    return house;
+  }
+
+  /* =========================================
+     MODE 3 : VEDIC (PURE BHAVA ±15°)
+     ========================================= */
+  if(vedicMode.checked){
+
+    let bhavaStart = pivotAbs - 15;
+    bhavaStart = ((bhavaStart % 360) + 360) % 360;
+
+    let diff = entAbs - bhavaStart;
+    diff = ((diff % 360) + 360) % 360;
+
+    let house = Math.floor(diff / 30) + 1;
+    if(house > 12) house -= 12;
+    return house;
+  }
+
+  return 1;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* =========================================
+   COUNTER TABLE ROW SELECTION MEMORY
+   (MULTI SELECT – UNTIL RELOAD)
+   ========================================= */
+window.__selectedCounterRows = new Set();
+
+
+
+
+/* =========================================================
+   BUILD COUNTER TABLE
+   ========================================================= */
+function buildCounterTable(){
+
+  let table = document.getElementById("counterTable");
+
+  /* clear old rows */
+  while(table.rows.length > 1){
+    table.deleteRow(1);
+  }
+
+
+
+
+ 
+let pivot = document.getElementById("kundaliPivot").value;
+
+const BASE_PLANET_ORDER = [
+  "Surya",
+  "Chandra",
+  "Mangala",
+  "Rahu",
+  "Jupiter",
+  "Saturn",
+  "Budha",
+  "Ketu",
+  "Venus"
+];
+
+let order;
+
+/* Pivot = Lagna → keep Lagna on top */
+if(pivot === "Lagna"){
+  order = ["Lagna", ...BASE_PLANET_ORDER];
+}
+
+/* Pivot = Planet → rotate cyclic order */
+else{
+  let idx = BASE_PLANET_ORDER.indexOf(pivot);
+  if(idx === -1) return;
+
+  order = [
+    ...BASE_PLANET_ORDER.slice(idx),
+    ...BASE_PLANET_ORDER.slice(0, idx)
+  ];
+}
+
+
+
+
+
+ 
+ 
+ 
+ 
+
+  /* remove duplicates, preserve order */
+  order = [...new Set(order)];
+
+  order.forEach(p=>{
+
+    let fwd, ret;
+
+    if(p === document.getElementById("kundaliPivot").value){
+      fwd = 1;
+      ret = 1;
+    }else{
+      fwd = getHouseFromPivot(p);
+	 ret = getRetroHouseFromPivot(p);
+
+    }
+
+    let r = table.insertRow();
+
+/* restore selection after redraw */
+if(window.__selectedCounterRows.has(p)){
+  r.classList.add("selectedRow");
+}
+
+		/* click toggle (MULTI SELECT) */
+		r.addEventListener("click", ()=>{
+
+		  if(window.__selectedCounterRows.has(p)){
+			window.__selectedCounterRows.delete(p);
+			r.classList.remove("selectedRow");
+		  }else{
+			window.__selectedCounterRows.add(p);
+			r.classList.add("selectedRow");
+		  }
+
+		});
+
+		r.insertCell().innerHTML = `<b>${p}</b>`;
+		r.insertCell().textContent = fwd;
+		r.insertCell().textContent = ret;
+
+  });
+}
+
+/* =========================================================
+   AUTO REFRESH HOOKS
+   ========================================================= */
+document.getElementById("kundaliPivot")
+  .addEventListener("change", buildCounterTable);
+
+["Lagna","Surya","Chandra","Mangala","Rahu",
+ "Jupiter","Saturn","Budha","Ketu","Venus"].forEach(p=>{
+  ["sign","deg","min","sec"].forEach(k=>{
+    let el=document.getElementById(p+"_"+k);
+    if(el){
+      el.addEventListener("change", buildCounterTable);
+      el.addEventListener("input", buildCounterTable);
+    }
+  });
+});
+
+/* initial draw */
+buildCounterTable();
+</script>
+
+
+
+
+
+
+
+<script>
+/* =========================================================
+   HOUSE FROM PIVOT — RETRO (BHAVA-CORRECT)
+   EXACT MIRROR OF FORWARD LOGIC
+   ========================================================= */
+function getRetroHouseFromPivot(entity){
+
+  let pivot = document.getElementById("kundaliPivot").value;
+
+  let pivotAbs = getAbsDeg(pivot);
+  let entAbs   = getAbsDeg(entity);
+
+  if(pivotAbs === null || entAbs === null) return 1;
+
+  /* =========================================
+     MODE 1 : SIGN-TO-SIGN (DEGREELESS)
+     ========================================= */
+  if(sign2signMode.checked){
+    let pSign = Math.floor(pivotAbs / 30);
+    let eSign = Math.floor(entAbs / 30);
+
+    let house = pSign - eSign + 1;
+    if(house <= 0) house += 12;
+
+    return house;
+  }
+
+  /* =========================================
+     MODE 2 : KP (0° BHAVA — BACKWARD)
+     ========================================= */
+  if(kpMode.checked){
+
+    /* force pivot to exact sign start */
+    let pivotStart = Math.floor(pivotAbs / 30) * 30;
+
+    let p = pivotStart;
+    let e = Math.floor(entAbs / 30) * 30;
+
+    let diff = p - e;
+    if(diff < 0) diff += 360;
+
+    let house = Math.floor(diff / 30) + 1;
+    if(house > 12) house -= 12;
+
+    return house;
+  }
+
+  /* =========================================
+     MODE 3 : VEDIC (±15° BHAVA — BACKWARD)
+     ========================================= */
+  if(vedicMode.checked){
+
+    let bhavaStart =
+      Math.floor(pivotAbs / 30) * 30 + 15;
+
+    bhavaStart = ((bhavaStart % 360) + 360) % 360;
+
+    let e = Math.floor(entAbs / 30) * 30 + 15;
+
+    let diff = bhavaStart - e;
+    diff = ((diff % 360) + 360) % 360;
+
+    let house = Math.floor(diff / 30) + 1;
+    if(house > 12) house -= 12;
+
+    return house;
+  }
+
+  return 1;
+}
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+/* =========================================================
+   MODE EXCLUSIVITY
+   ========================================================= */
+
+function enforceMode(mode){
+
+  sign2signMode.checked = false;
+  kpMode.checked = false;
+  vedicMode.checked = false;
+
+  if(mode === "sign") sign2signMode.checked = true;
+  if(mode === "kp") kpMode.checked = true;
+  if(mode === "vedic") vedicMode.checked = true;
+
+  redrawAll();
+}
+
+sign2signMode.onchange = ()=> enforceMode("sign");
+kpMode.onchange        = ()=> enforceMode("kp");
+vedicMode.onchange     = ()=> enforceMode("vedic");
+
+/* default */
+enforceMode("kp");
+
+
+sign2signMode.addEventListener("change",()=>{
+  if(sign2signMode.checked) enforceMode("sign");
+});
+
+kpMode.addEventListener("change",()=>{
+  if(kpMode.checked) enforceMode("kp");
+});
+
+vedicMode.addEventListener("change",()=>{
+  if(vedicMode.checked) enforceMode("vedic");
+});
+
+
+
+
+/* =========================================================
+   GET PIVOT REFERENCE DEGREE
+   KP  → 0°
+   VED → 15°
+   NONE → ACTUAL DEGREE
+   ========================================================= */
+function getPivotReferenceAbs(pivot){
+
+  let sign = document.getElementById(pivot+"_sign").value;
+  let signIndex = signs.indexOf(sign);
+  if(signIndex <= 0) return null;
+
+  /* KP MODE */
+  if(kpMode.checked){
+    return (signIndex - 1) * 30;
+  }
+
+  /* VEDIC MODE */
+  if(vedicMode.checked){
+    return (signIndex - 1) * 30 + 15;
+  }
+
+  /* NORMAL MODE */
+  return getAbsDeg(pivot);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* =========================================================
+   GLOBAL REDRAW
+   ========================================================= */
+function redrawAll(){
+  drawSIKundali();
+  buildCounterTable();
+}
+
+/* Initial sync */
+redrawAll();
+</script>
+
+
+
+
+
+</body>
+</html>
