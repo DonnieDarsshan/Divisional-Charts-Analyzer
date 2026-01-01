@@ -4,6 +4,11 @@ A **pure client-side astrology analysis tool** built with **HTML, CSS, and Vanil
 This project focuses on **Divisional Charts, South Indian Kundali visualization, KP / Vedic systems, pivot-based house logic, and planetary counters** — all without any backend or external libraries.
 
 ---
+## ✨ Features
+- Live Demo
+- https://donniedarsshan.github.io/Divisional-Charts-Analyzer/
+
+
 
 ## ✨ Features
 
