@@ -38,13 +38,46 @@ body{
   padding:20px;
 }
 
+
+
+
+
+
+
+
+
 /* HEADINGS */
+
+
+
 h2{
   text-align:center;
-  color:var(--accent);
-  letter-spacing:2.5px;
-  text-shadow:0 0 10px rgba(212,175,55,.45);
+  font-size:36px;
+  font-weight:1000;
+  letter-spacing:4px;
+  text-transform:uppercase;
+
+  /* TWO-COLOR GRADIENT TEXT */
+  background:linear-gradient(
+    90deg,
+    #10b981,
+    #d4af37
+  );
+
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  background-clip:text;
+  color:transparent;
 }
+
+
+
+
+
+
+
+
+
 
 /* =========================
    TABLES
@@ -154,6 +187,12 @@ hr{
   transform:scale(1.1);
 }
 
+
+
+
+
+
+
 /* =========================
    SOUTH INDIAN KUNDALI
    ========================= */
@@ -256,17 +295,18 @@ hr{
 
 
 
+
+
 #counterTable tr.selectedRow[data-color="maroon"]{
   background:linear-gradient(
     135deg,
-    rgba(128,0,0,0.32),
-    rgba(30,0,0,0.90)
+    rgba(255,0,102,0.26),
+    rgba(50,0,25,0.82)
   );
   box-shadow:
-    inset 0 0 18px rgba(200,60,60,0.40),
-    inset 0 0 3px rgba(0,0,0,0.9);
+    inset 0 0 16px rgba(255,90,170,0.5),
+    inset 0 0 2px rgba(0,0,0,0.8);
 }
-
 
 
 
@@ -293,20 +333,27 @@ hr{
    PER-ELEMENT COLOR SELECTION (NO GLOBAL STATE)
    ========================================================= */
 
-/* 🟣 PURPLE – #660066 */
+
+
+
+
+
 #siKundali .siCell.selectedRasi[data-color="purple"]{
   background:radial-gradient(
     circle at center,
-    rgba(102,0,102,0.38),
-    rgba(45,0,45,0.85),
-    rgba(10,0,10,0.95)
+    rgba(102,0,204,0.30),
+    rgba(55,0,120,0.65),
+    rgba(20,0,45,0.85)
   );
   box-shadow:
-    inset 0 0 24px rgba(180,60,180,0.45),
+    inset 0 0 24px rgba(160,100,255,0.55),
     inset 0 0 6px rgba(0,0,0,0.8),
-    0 0 18px rgba(120,0,120,0.6);
-  border:2px solid rgba(140,40,140,0.85);
+    0 0 18px rgba(102,0,204,0.6);
+  border:2px solid rgba(102,0,204,0.65);
 }
+
+
+
 
 
 
@@ -314,15 +361,15 @@ hr{
 #siKundali .siCell.selectedRasi[data-color="maroon"]{
   background:radial-gradient(
     circle at center,
-    rgba(128,0,0,0.38),
-    rgba(60,0,0,0.85),
-    rgba(15,0,0,0.95)
+    rgba(255,0,102,0.28),
+    rgba(120,0,50,0.65),
+    rgba(30,0,15,0.85)
   );
   box-shadow:
-    inset 0 0 24px rgba(200,60,60,0.45),
-    inset 0 0 6px rgba(0,0,0,0.85),
-    0 0 18px rgba(120,0,0,0.6);
-  border:2px solid rgba(140,30,30,0.85);
+    inset 0 0 24px rgba(255,80,160,0.55),
+    inset 0 0 6px rgba(0,0,0,0.75),
+    0 0 18px rgba(255,0,102,0.6);
+  border:2px solid rgba(255,0,102,0.65);
 }
 
 
@@ -345,8 +392,176 @@ hr{
 
 
 
-</style>
 
+
+
+
+/* =========================================================
+   SOUTH INDIAN KUNDALI STYLE
+   EMERALD MATRIX × EGYPTIAN (OVERRIDES OLD FIRE)
+   ========================================================= */
+
+#siKundali{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  grid-template-rows:repeat(4,1fr);
+  width:520px;
+  aspect-ratio:1/1;
+  background:var(--panel);
+  border:2px solid var(--border);
+  box-shadow:0 0 26px rgba(16,185,129,.55);
+}
+
+.siCell{
+  border:1px solid var(--soft);
+  padding:10px;
+  position:relative;
+  font-size:13px;
+}
+
+.siCenter{
+  background:#010a08;
+}
+
+.siSign{
+  position:absolute;
+  bottom:4px;
+  right:6px;
+  font-size:13px;
+  font-weight:800;
+  color:var(--accent);
+}
+
+.siHouse{
+  position:absolute;
+  top:4px;
+  left:6px;
+  font-size:14px;
+  font-weight:900;
+  color:#fef3c7;
+}
+
+.siList{
+  margin-top:18px;
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+  white-space:nowrap;
+}
+
+
+
+
+
+
+
+/* =========================================
+   COLOR PALETTE (WINDOWS PAINT STYLE)
+   ========================================= */
+#colorPalette{
+  display:flex;
+  gap:8px;
+  margin-left:10px;
+}
+
+.colorBox{
+  width:22px;
+  height:22px;
+  border:2px solid #000000;
+  cursor:pointer;
+}
+
+
+
+.colorBox.maroon{
+  background:radial-gradient(
+    circle at top left,
+    #ff0066,
+    #330015 70%
+  );
+}
+
+
+
+.colorBox.active{
+  outline:3px solid #ffffff;
+}
+
+
+
+
+
+
+
+
+
+
+/* =========================================
+   COUNTER TABLE – PER ROW COLOR MEMORY
+   ========================================= */
+
+
+
+#counterTable tr.selectedRow[data-color="purple"]{
+  background:linear-gradient(
+    135deg,
+    rgba(102,0,204,0.28),
+    rgba(35,0,70,0.85)
+  );
+  box-shadow:
+    inset 0 0 16px rgba(160,100,255,0.5),
+    inset 0 0 2px rgba(0,0,0,0.8);
+}
+
+
+
+
+
+#counterTable tr.selectedRow[data-color="darkred"]{
+  background:linear-gradient(
+    135deg,
+    rgba(180,40,40,0.28),
+    rgba(20,0,0,0.82)
+  );
+  box-shadow:
+    inset 0 0 16px rgba(220,60,60,0.45),
+    inset 0 0 2px rgba(0,0,0,0.8);
+}
+
+
+
+
+#counterTable tr.selectedRow td{
+  color:#ffffff;
+  font-weight:normal;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+/* =========================================
+   FIX PLL PLANET COLUMN WRAPPING
+   ========================================= */
+#pllContainer table td:nth-child(2),
+#pllContainer table th:nth-child(2){
+  white-space: nowrap;     /* prevent line break */
+  min-width: 80px;        /* enough for "Chandra $" */
+  font-weight: 600;
+}
+
+
+
+
+
+</style>
 
 
 
@@ -693,40 +908,49 @@ function clearAll(){
 <!-- =========================
      PIVOT CONTROL
      ========================= -->
+	 
+	 
 <div class="pivotBar">
 
-
   <span>Pivot :</span>
-
   <select id="kundaliPivot"></select>
 
-	<label>
-	  <input type="checkbox" id="sign2signMode">
-	  Sign-to-Sign
-	</label>
+  <!-- ===== TARA MODE (NEW) ===== -->
+  <span>Tara :</span>
+  <select id="taraMode">
+    <option value="Star Lord" selected>Star Lord</option>
+    <option value="Planet">Planet</option>
+  </select>
+  <!-- =========================== -->
 
-	<label>
-	  <input type="checkbox" id="kpMode">
-	  KP (0°)
-	</label>
+  <label>
+    <input type="checkbox" id="sign2signMode">
+    Sign-to-Sign
+  </label>
 
-	<label>
-	  <input type="checkbox" id="vedicMode" checked>
-		Vedic (15°)
-	</label>
+  <label>
+    <input type="checkbox" id="kpMode">
+    KP (0°)
+  </label>
+
+  <label>
+    <input type="checkbox" id="vedicMode" checked>
+    Vedic (15°)
+  </label>
+
+  <label>
+    <input type="checkbox" id="westAspMode" checked>
+    West Asp
+  </label>
+
+  <div id="colorPalette">
+    <div class="colorBox purple active" data-color="purple" title="Royal Purple"></div>
+    <div class="colorBox maroon" data-color="maroon" title="Blood Maroon"></div>
+  </div>
+
+</div>
 
 
-	<label>
-	  <input type="checkbox" id="westAspMode" checked>
-	  West Asp
-	</label>
-
-	<div id="colorPalette">
-	  <div class="colorBox purple active" data-color="purple" title="Royal Purple"></div>
-		<div class="colorBox maroon" data-color="maroon" title="Blood Maroon"></div>
-
-
-	</div>
 
 
 
@@ -746,143 +970,6 @@ function clearAll(){
 
 
 
-<style>
-/* =========================================================
-   SOUTH INDIAN KUNDALI STYLE
-   EMERALD MATRIX × EGYPTIAN (OVERRIDES OLD FIRE)
-   ========================================================= */
-
-#siKundali{
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  grid-template-rows:repeat(4,1fr);
-  width:520px;
-  aspect-ratio:1/1;
-  background:var(--panel);
-  border:2px solid var(--border);
-  box-shadow:0 0 26px rgba(16,185,129,.55);
-}
-
-.siCell{
-  border:1px solid var(--soft);
-  padding:10px;
-  position:relative;
-  font-size:13px;
-}
-
-.siCenter{
-  background:#010a08;
-}
-
-.siSign{
-  position:absolute;
-  bottom:4px;
-  right:6px;
-  font-size:13px;
-  font-weight:800;
-  color:var(--accent);
-}
-
-.siHouse{
-  position:absolute;
-  top:4px;
-  left:6px;
-  font-size:14px;
-  font-weight:900;
-  color:#fef3c7;
-}
-
-.siList{
-  margin-top:18px;
-  display:flex;
-  flex-direction:column;
-  gap:4px;
-  white-space:nowrap;
-}
-
-
-
-
-
-
-
-/* =========================================
-   COLOR PALETTE (WINDOWS PAINT STYLE)
-   ========================================= */
-#colorPalette{
-  display:flex;
-  gap:8px;
-  margin-left:10px;
-}
-
-.colorBox{
-  width:22px;
-  height:22px;
-  border:2px solid #000000;
-  cursor:pointer;
-}
-
-
-
-.colorBox.maroon{
-  background:radial-gradient(
-    circle at top left,
-    #800000,
-    #2a0000 70%
-  );
-}
-
-
-.colorBox.active{
-  outline:3px solid #ffffff;
-}
-
-
-
-
-
-
-
-
-
-
-/* =========================================
-   COUNTER TABLE – PER ROW COLOR MEMORY
-   ========================================= */
-#counterTable tr.selectedRow[data-color="purple"]{
-  background:linear-gradient(
-    135deg,
-    rgba(80,0,120,0.45),
-    rgba(20,0,30,0.85)
-  );
-}
-
-#counterTable tr.selectedRow[data-color="darkred"]{
-  background:linear-gradient(
-    135deg,
-    rgba(180,40,40,0.28),
-    rgba(20,0,0,0.82)
-  );
-  box-shadow:
-    inset 0 0 16px rgba(220,60,60,0.45),
-    inset 0 0 2px rgba(0,0,0,0.8);
-}
-
-
-
-
-#counterTable tr.selectedRow td{
-  color:#ffffff;
-  font-weight:normal;
-}
-
-
-
-
-
-
-
-</style>
 
 
 
@@ -1220,6 +1307,7 @@ drawSIKundali();
   <th>Degree Difference</th>
   <th>West Aspect</th>
   <th>Retro</th>
+  <th>State</th>
   </tr>
 </table>
 
@@ -1326,7 +1414,8 @@ function getHouseFromPivot(entity){
    COUNTER TABLE ROW SELECTION MEMORY
    (MULTI SELECT – UNTIL RELOAD)
    ========================================= */
-window.__selectedCounterRows = new Set();
+window.__selectedCounterRows = {};
+
 
 
 
@@ -1454,25 +1543,34 @@ const SIGN_LORDS = {
 
 
 
+
+
+
+
+
+
+
+
 function getHouseLordships(planet){
 
-  let lagnaSign = document.getElementById("Lagna_sign").value;
-  if(!lagnaSign) return "";
+  /* 🔥 pivot sign, not Lagna */
+  let pivot = document.getElementById("kundaliPivot").value;
+  let pivotSign = document.getElementById(pivot + "_sign").value;
+  if(!pivotSign) return "";
 
-  /* Zodiac order */
   const ZODIAC = [
     "Aries","Taurus","Gemini","Cancer",
     "Leo","Virgo","Libra","Scorpio",
     "Sagittarius","Capricorn","Aquarius","Pisces"
   ];
 
-  let lagnaIndex = ZODIAC.indexOf(lagnaSign);
-  if(lagnaIndex === -1) return "";
+  let pivotIndex = ZODIAC.indexOf(pivotSign);
+  if(pivotIndex === -1) return "";
 
   let houses = [];
 
   for(let i=0;i<12;i++){
-    let sign = ZODIAC[(lagnaIndex + i) % 12];
+    let sign = ZODIAC[(pivotIndex + i) % 12];
     let lord = SIGN_LORDS[sign];
 
     if(lord === planet){
@@ -1606,33 +1704,34 @@ else{
 
     let r = table.insertRow();
 
-/* restore selection after redraw */
-if(window.__selectedCounterRows.has(p)){
+/* restore selection + color after redraw */
+if(window.__selectedCounterRows[p]){
   r.classList.add("selectedRow");
+  r.setAttribute("data-color", window.__selectedCounterRows[p]);
 }
+
 
 
 
 
 		r.addEventListener("click", ()=>{
 
-		  if(window.__selectedCounterRows.has(p)){
-			window.__selectedCounterRows.delete(p);
+		  if(window.__selectedCounterRows[p]){
+			delete window.__selectedCounterRows[p];
 			r.classList.remove("selectedRow");
 			r.removeAttribute("data-color");
 		  }else{
-			window.__selectedCounterRows.add(p);
-			r.classList.add("selectedRow");
-
-			/* 🔒 STORE COLOR PER ROW */
 			const activeColor =
 			  document.querySelector("#colorPalette .colorBox.active")
-				?.dataset.color || "red";
+				?.dataset.color || "purple";
 
+			window.__selectedCounterRows[p] = activeColor;
+			r.classList.add("selectedRow");
 			r.setAttribute("data-color", activeColor);
 		  }
 
 		});
+
 
 
 
@@ -1651,13 +1750,34 @@ if(window.__selectedCounterRows.has(p)){
 		let diff = getDegreeDifference(p);
 		let aspect = diff !== "" ? getWestAspect(diff) : "";
 
+
+
+
+
 		/* INSERT EXACTLY 6 CELLS (MATCH HEADER) */
-		r.insertCell().innerHTML = `<b>${p}</b>`;
+		let state = getPlanetState(p);
+
+		/* Planet name with TENANTED indicator */
+		let planetLabel = p;
+
+		if(isTenantedPlanet(p)){
+		  planetLabel += " $";
+		}
+
+		r.insertCell().innerHTML = `<b>${planetLabel}</b>`;
+
+
 		r.insertCell().textContent = fwd;
 		r.insertCell().textContent = lordships;
 		r.insertCell().textContent = diff !== "" ? diff.toFixed(2) + "°" : "";
 		r.insertCell().textContent = aspect;
 		r.insertCell().textContent = ret;
+		r.insertCell().textContent = state;
+
+
+
+
+
 
 
 
@@ -1685,6 +1805,126 @@ document.getElementById("kundaliPivot")
 /* initial draw */
 buildCounterTable();
 </script>
+
+
+
+
+
+
+
+
+
+<script>
+/* =========================================================
+   PLANET SIGN STATE LOGIC (LOCKED RULESET)
+   ========================================================= */
+
+const UCCHA = {
+  Surya:["Aries"],
+  Chandra:["Taurus"],
+  Mangala:["Capricorn"],
+  Budha:["Virgo"],
+  Jupiter:["Cancer"],
+  Venus:["Pisces"],
+  Saturn:["Libra"],
+  Rahu:["Taurus","Gemini"],
+  Ketu:["Scorpio","Sagittarius"]
+};
+
+const NEECHA = {
+  Surya:["Libra"],
+  Chandra:["Scorpio"],
+  Mangala:["Cancer"],
+  Budha:["Pisces"],
+  Jupiter:["Capricorn"],
+  Venus:["Virgo"],
+  Saturn:["Aries"],
+  Rahu:["Scorpio","Sagittarius"],
+  Ketu:["Taurus","Gemini"]
+};
+
+const OWN_SIGNS = {
+  Surya:["Leo"],
+  Chandra:["Cancer"],
+  Mangala:["Aries","Scorpio"],
+  Budha:["Gemini","Virgo"],
+  Jupiter:["Sagittarius","Pisces"],
+  Venus:["Taurus","Libra"],
+  Saturn:["Capricorn","Aquarius"],
+  Rahu:["Aquarius"],
+  Ketu:["Sagittarius"]
+};
+
+/* FRIENDSHIP TABLES */
+const FRIENDS = {
+  Surya:["Chandra","Mangala","Jupiter"],
+  Chandra:["Surya","Budha"],
+  Mangala:["Surya","Chandra","Jupiter"],
+  Budha:["Surya","Venus"],
+  Jupiter:["Surya","Chandra","Mangala"],
+  Venus:["Budha","Saturn"],
+  Saturn:["Budha","Venus"],
+
+  Rahu:["Venus","Budha","Saturn"],
+  Ketu:["Jupiter","Mangala"]
+};
+
+const NEUTRALS = {
+  Surya:["Budha"],
+  Chandra:["Mangala"],
+  Mangala:["Venus","Saturn"],
+  Budha:["Mangala","Jupiter","Saturn"],
+  Jupiter:["Saturn"],
+  Venus:["Mangala","Jupiter"],
+  Saturn:["Jupiter"],
+
+  Rahu:["Surya"],
+  Ketu:["Venus","Budha","Surya"]
+};
+
+const ENEMIES = {
+  Surya:["Venus","Saturn"],
+  Chandra:["Saturn","Venus","Jupiter"],
+  Mangala:["Budha"],
+  Budha:["Chandra"],
+  Jupiter:["Budha","Venus"],
+  Venus:["Surya","Chandra"],
+  Saturn:["Surya","Chandra","Mangala"],
+
+  Rahu:["Jupiter","Mangala","Chandra","Ketu"],
+  Ketu:["Saturn","Rahu","Chandra"]
+};
+
+/* =========================================================
+   GET PLANET STATE BY SIGN
+   ========================================================= */
+function getPlanetState(planet){
+
+  let sign = document.getElementById(planet+"_sign").value;
+  if(!sign) return "";
+
+  if(UCCHA[planet]?.includes(sign)) return "Uccha";
+  if(NEECHA[planet]?.includes(sign)) return "Neecha";
+  if(OWN_SIGNS[planet]?.includes(sign)) return "Own";
+
+  let lord = SIGN_LORDS[sign];
+  if(FRIENDS[planet]?.includes(lord)) return "Friend";
+  if(NEUTRALS[planet]?.includes(lord)) return "Neutral";
+  if(ENEMIES[planet]?.includes(lord)) return "Enemy";
+
+  return "";
+}
+</script>
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1886,7 +2126,9 @@ function getPivotReferenceAbs(pivot){
 function redrawAll(){
   drawSIKundali();
   buildCounterTable();
+  redrawPLL();   // 🔥 FORCE PLL EVERY TIME
 }
+
 
 /* Initial sync */
 redrawAll();
@@ -1930,6 +2172,861 @@ document.querySelectorAll("#colorPalette .colorBox").forEach(box=>{
   });
 });
 </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<hr>
+
+<h2 style="text-align:center">
+PLANETARY LEVEL BY LEVEL ANALYZER
+</h2>
+
+
+
+<div id="pllContainer"></div>
+
+
+
+
+<script>
+
+
+const PLANET_SHORT = {
+  Surya:"Sy",
+  Chandra:"Ch",
+  Mangala:"Ma",
+  Rahu:"Ra",
+  Jupiter:"Ju",
+  Saturn:"Sa",
+  Budha:"Bu",
+  Ketu:"Ke",
+  Venus:"Ve",
+  Lagna:"Lg"
+};
+
+
+function getPlanetHouse(entity){
+  return getHouseFromPivot(entity);
+}
+
+
+
+
+
+
+
+function getConjunctPlanets(entity){
+
+  let baseAbs = getAbsDeg(entity);
+  if(baseAbs === null) return "";
+
+  let list = [];
+
+  planets.forEach(p=>{
+    if(p === entity) return;
+	if(p === "Lagna") return;   // ❌ Lagna is NOT a conjunct planet
+
+
+    let pAbs = getAbsDeg(p);
+    if(pAbs === null) return;
+
+    let diff = Math.abs(baseAbs - pAbs);
+    if(diff > 180) diff = 360 - diff;
+
+    if(diff <= 13){
+
+      let set = new Set();
+
+      /* placed house */
+      set.add(getHouseFromPivot(p));
+
+      /* lordships */
+      let lords =
+        (p==="Rahu"||p==="Ketu")
+        ? getRahuKetuHouseLordships(p)
+        : getHouseLordships(p);
+
+      lords.split(",").forEach(x=>{
+        if(x) set.add(+x);
+      });
+
+      list.push(
+        `${PLANET_SHORT[p]}(${[...set].sort((a,b)=>a-b).join(",")})`
+      );
+    }
+  });
+
+  return list.join(", ");
+}
+
+
+
+
+
+
+const VEDIC_ASPECTS = {
+  Surya:[7],
+  Chandra:[7],
+  Budha:[7],
+  Venus:[7],
+
+  Mangala:[4,7,8],
+  Jupiter:[5,7,9],
+  Saturn:[3,7,10],
+
+  Rahu:[5,7,9],
+  Ketu:[5,7,9]
+};
+
+
+
+
+
+
+
+
+function getAspectingHouses(planet){
+
+  let baseHouse = getHouseFromPivot(planet);
+  if(!baseHouse) return "";
+
+  let aspects = VEDIC_ASPECTS[planet] || [7];
+
+  let houses = aspects.map(a=>{
+    let h = baseHouse + (a - 1);
+    if(h > 12) h -= 12;
+    return h;
+  });
+
+  return houses.join(",");
+}
+
+
+
+
+
+
+
+function getAspectingPlanets(entity){
+
+  let result = [];
+
+  let baseHouse = getHouseFromPivot(entity);
+  if(!baseHouse) return "";
+
+  /* aspects of the GIVEN planet */
+  let aspects = VEDIC_ASPECTS[entity] || [7];
+
+  aspects.forEach(a => {
+
+    let targetHouse = baseHouse + (a - 1);
+    if(targetHouse > 12) targetHouse -= 12;
+
+    /* search which planets are sitting in this house */
+    planets.forEach(p => {
+
+      if(p === "Lagna") return;   // ❌ ignore Lagna
+	  if(p === "Rahu" || p === "Ketu") return;   // ❌ remove nodes from Aspecting
+      if(p === entity) return;
+
+      let pHouse = getHouseFromPivot(p);
+      if(pHouse !== targetHouse) return;
+
+      let set = new Set();
+
+      /* placed house */
+      set.add(pHouse);
+
+      /* lordships */
+      let lords =
+        (p==="Rahu"||p==="Ketu")
+        ? getRahuKetuHouseLordships(p)
+        : getHouseLordships(p);
+
+      lords.split(",").forEach(x=>{
+        if(x) set.add(+x);
+      });
+
+      result.push(
+        `${PLANET_SHORT[p]}(${[...set].sort((a,b)=>a-b).join(",")})`
+      );
+
+    });
+  });
+
+  return [...new Set(result)].join(", ");
+}
+
+
+
+
+
+
+
+
+
+
+function getAspectedBy(entity){
+
+  let list = [];
+
+  planets.forEach(p=>{
+    if(p === entity) return;
+
+    /* ❌ remove Rahu ↔ Ketu mutual aspect */
+    if(
+      (entity==="Rahu" && p==="Ketu") ||
+      (entity==="Ketu" && p==="Rahu")
+    ){
+      return;
+    }
+
+    let aspects = VEDIC_ASPECTS[p] || [7];
+    let pHouse = getHouseFromPivot(p);
+    let eHouse = getHouseFromPivot(entity);
+
+    aspects.forEach(a=>{
+      let h = pHouse + (a - 1);
+      if(h > 12) h -= 12;
+
+      if(h === eHouse){
+        list.push(PLANET_SHORT[p]);
+      }
+    });
+  });
+
+  return [...new Set(list)].join(", ");
+}
+
+
+
+
+
+
+
+function getSummation(planet){
+
+  let set = new Set();
+
+  /* placed house */
+  set.add(getHouseFromPivot(planet));
+
+  /* lordships */
+  let lords =
+    (planet==="Rahu"||planet==="Ketu")
+    ? getRahuKetuHouseLordships(planet)
+    : getHouseLordships(planet);
+
+  lords.split(",").forEach(x=>{
+    if(x) set.add(+x);
+  });
+
+  return [...set].sort((a,b)=>a-b).join(",");
+}
+
+
+
+
+
+
+
+
+
+
+
+
+/* =========================================================
+   KP CONSTANTS
+   ========================================================= */
+
+/*
+Vimshottari Dasha order (fixed sequence)
+This order is used for:
+- Star lord
+- Sub lord
+- Sub-sub lord
+*/
+const KP_DASHA_ORDER = [
+  "Ketu","Venus","Surya","Chandra","Mangala",
+  "Rahu","Jupiter","Saturn","Budha"
+];
+
+/*
+Vimshottari years for each planet
+These decide the LENGTH of sub divisions
+*/
+const KP_DASHA_YEARS = {
+  Ketu:7,
+  Venus:20,
+  Surya:6,
+  Chandra:10,
+  Mangala:7,
+  Rahu:18,
+  Jupiter:16,
+  Saturn:19,
+  Budha:17
+};
+
+/*
+Each Nakshatra length = 13°20′ = 13.333333°
+*/
+const NAKSHATRA_LEN = 13 + 20/60;
+
+
+
+
+
+
+
+
+
+
+/* =========================================================
+   COLLECT ALL STAR LORDS PRESENT IN CURRENT CHART
+   ========================================================= */
+function getAllStarLordsPresent(){
+
+  let set = new Set();
+
+  planets.forEach(p => {
+
+    if(p === "Lagna") return;
+
+    let star = getStarLord(p);
+    if(star){
+      set.add(star);
+    }
+
+  });
+
+  return set; // Set of planets acting as Star Lords
+}
+
+
+
+
+
+/* =========================================================
+   CHECK IF PLANET IS TENANTED
+   ========================================================= */
+function isTenantedPlanet(planet){
+
+  // Lagna is never marked
+  if(planet === "Lagna") return false;
+
+  let starLordsPresent = getAllStarLordsPresent();
+
+  // If planet NOT present as Star Lord → TENANTED
+  return !starLordsPresent.has(planet);
+}
+
+
+
+
+
+
+
+/* =========================================================
+   TARA CONSTANTS
+   ========================================================= */
+
+/*
+Fixed Vimshottari sequence for Tara
+*/
+const TARA_SEQUENCE = [
+  "Janma",
+  "Sampath",
+  "Vipath",
+  "Kshema",
+  "Pratyari",
+  "Sadhana",
+  "Nidana",
+  "Mithra",
+  "Ati-Mithra"
+];
+
+/*
+Planet order same as Vimshottari Dasha
+*/
+const TARA_PLANET_ORDER = [
+  "Ketu","Venus","Surya","Chandra",
+  "Mangala","Rahu","Jupiter","Saturn","Budha"
+];
+
+
+
+
+
+
+
+
+
+/* =========================================================
+   CALCULATE TARA (LABEL ONLY — NO PLANET NAME)
+   ========================================================= */
+function getTaraLabel(actualPlanet, basePlanet){
+
+  let mode = document.getElementById("taraMode").value;
+  let pivot = document.getElementById("kundaliPivot").value;
+
+  let janmaPlanet = "";
+
+  /* =========================
+     CASE 1 : PIVOT = LAGNA
+     ========================= */
+  if(pivot === "Lagna"){
+
+    // Janma Tara is ALWAYS Lagna's Star Lord
+    janmaPlanet = getStarLord("Lagna");
+  }
+
+  /* =========================
+     CASE 2 : PIVOT = PLANET
+     ========================= */
+  else{
+
+    if(mode === "Planet"){
+      janmaPlanet = pivot;
+    }else{
+      janmaPlanet = getStarLord(pivot);
+    }
+  }
+
+  if(!janmaPlanet || !actualPlanet) return "";
+
+  let janmaIndex = TARA_PLANET_ORDER.indexOf(janmaPlanet);
+  let actualIndex = TARA_PLANET_ORDER.indexOf(actualPlanet);
+
+  if(janmaIndex === -1 || actualIndex === -1) return "";
+
+  let diff = actualIndex - janmaIndex;
+  if(diff < 0) diff += 9;
+
+  // ✅ RETURN ONLY TARA NAME
+  return TARA_SEQUENCE[diff];
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+Returns the Nakshatra lord of a planet
+*/
+function getStarLord(entity){
+
+  let abs = getAbsDeg(entity);
+  if(abs === null) return "";
+
+  /* Position inside zodiac */
+  let pos = abs % 360;
+
+  /* Which Nakshatra index (0–26) */
+  let starIndex = Math.floor(pos / NAKSHATRA_LEN);
+
+  /* Each 3 Nakshatras repeat dasha order */
+  let lordIndex = starIndex % 9;
+
+  return KP_DASHA_ORDER[lordIndex];
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+Returns Sub Lord based on KP Vimshottari proportions
+*/
+
+
+
+function getSubLord(entity){
+
+  let abs = getAbsDeg(entity);
+  if(abs === null) return "";
+
+  let posInStar = abs % NAKSHATRA_LEN;
+
+  let starLord = getStarLord(entity);
+  let startIndex = KP_DASHA_ORDER.indexOf(starLord);
+
+  let totalYears = 120;
+  let acc = 0;
+
+  for(let i=0;i<9;i++){
+
+    let p = KP_DASHA_ORDER[(startIndex + i) % 9];
+
+    let portion =
+      (KP_DASHA_YEARS[p] / totalYears) * NAKSHATRA_LEN;
+
+    acc += portion;
+
+    if(posInStar <= acc){
+      return p;
+    }
+  }
+
+  return "";
+}
+
+
+
+
+
+
+
+
+
+
+
+/*
+Star lord of the Sub Lord planet
+*/
+function getStarOfSubLord(entity){
+
+  let sub = getSubLord(entity);
+  if(!sub) return "";
+
+  return getStarLord(sub);
+}
+
+
+
+
+
+
+/*
+Returns Sub-Sub Lord using Vimshottari again
+*/
+
+
+function getSubSubLord(entity){
+
+  let abs = getAbsDeg(entity);
+  if(abs === null) return "";
+
+  let posInStar = abs % NAKSHATRA_LEN;
+
+  let starLord = getStarLord(entity);
+  let subLord  = getSubLord(entity);
+
+  let starIndex = KP_DASHA_ORDER.indexOf(starLord);
+  let subIndex  = KP_DASHA_ORDER.indexOf(subLord);
+
+  let totalYears = 120;
+  let acc = 0;
+
+  for(let i=0;i<9;i++){
+
+    let p = KP_DASHA_ORDER[(starIndex + i) % 9];
+    let pLen = (KP_DASHA_YEARS[p] / totalYears) * NAKSHATRA_LEN;
+
+    if(posInStar > acc && posInStar <= acc + pLen){
+
+      let posInSub = posInStar - acc;
+      let acc2 = 0;
+
+      for(let j=0;j<9;j++){
+        let q = KP_DASHA_ORDER[(subIndex + j) % 9];
+        let qLen = (KP_DASHA_YEARS[q] / totalYears) * pLen;
+
+        acc2 += qLen;
+
+        if(posInSub <= acc2){
+          return q;
+        }
+      }
+    }
+
+    acc += pLen;
+  }
+
+  return "";
+}
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+Star lord of the Sub-Sub Lord planet
+*/
+function getStarOfSubSub(entity){
+
+  let subsub = getSubSubLord(entity);
+  if(!subsub) return "";
+
+  return getStarLord(subsub);
+}
+
+
+
+
+
+
+
+
+
+
+/*
+Returns actual planet name for each KP level
+*/
+function resolveEntity(entity, level){
+
+  if(level === "Planet") return entity;
+  if(level === "Star Lord") return getStarLord(entity);
+  if(level === "Sub Lord") return getSubLord(entity);
+  if(level === "Star of Sub Lord") return getStarOfSubLord(entity);
+  if(level === "Sub-Sub") return getSubSubLord(entity);
+  if(level === "Star of Sub-Sub") return getStarOfSubSub(entity);
+
+  return "";
+}
+
+
+
+
+
+
+
+
+const KP_LEVELS = [
+  "Planet",
+  "Star Lord",
+  "Sub Lord",
+  "Star of Sub Lord",
+  "Sub-Sub",
+  "Star of Sub-Sub"
+];
+
+
+
+
+
+
+
+
+
+
+
+function buildPLLTables(){
+
+  const container = document.getElementById("pllContainer");
+  container.innerHTML = ""; // clear old tables
+
+  const PLL_PLANETS =
+  (document.getElementById("kundaliPivot").value === "Lagna")
+  ? ["Surya","Chandra","Mangala","Rahu","Jupiter","Saturn","Budha","Ketu","Venus"]
+  : (()=>{
+
+      let base = ["Surya","Chandra","Mangala","Rahu","Jupiter","Saturn","Budha","Ketu","Venus"];
+      let p = document.getElementById("kundaliPivot").value;
+      let i = base.indexOf(p);
+      return i===-1 ? base : [...base.slice(i),...base.slice(0,i)];
+    })();
+
+
+  PLL_PLANETS.forEach(p => {
+
+    /* ---------- HEADING ---------- */
+    let h = document.createElement("h3");
+    h.style.textAlign = "center";
+    h.style.marginTop = "30px";
+    h.textContent = `PLANET : ${p}`;
+    container.appendChild(h);
+
+    /* ---------- TABLE ---------- */
+    let table = document.createElement("table");
+    table.style.maxWidth = "1400px";
+    table.style.margin = "0 auto";
+
+    table.innerHTML = `
+      <tr>
+        <th>Entity</th>
+		<th>Planet</th>
+		<th>House</th>
+		<th>Lords Of</th>
+		<th>Summation</th>
+		<th>Conjunct Planets</th>
+		<th>Aspecting</th>
+		<th>Aspecting Houses</th>
+		<th>Aspected By</th>
+		<th>Tara</th>
+
+
+      </tr>
+    `;
+
+    /* ---------- 6 LEVELS ---------- */
+    KP_LEVELS.forEach(level => {
+
+      let actual = resolveEntity(p, level);
+      if(!actual) return;
+
+      let r = table.insertRow();
+
+      r.insertCell().textContent = level;
+      // Planet name with TENANTED indicator
+		let planetLabel = actual;
+
+		if(isTenantedPlanet(actual)){
+		  planetLabel += " $";
+		}
+
+		r.insertCell().textContent = planetLabel;
+
+
+      r.insertCell().textContent = getHouseFromPivot(actual);
+
+      let lords =
+        (actual==="Rahu"||actual==="Ketu")
+        ? getRahuKetuHouseLordships(actual)
+        : getHouseLordships(actual);
+
+      r.insertCell().textContent = lords;
+	r.insertCell().textContent = getSummation(actual);
+	r.insertCell().textContent = getConjunctPlanets(actual);
+	r.insertCell().textContent = getAspectingPlanets(actual);
+	r.insertCell().textContent = getAspectingHouses(actual);
+	r.insertCell().textContent = getAspectedBy(actual);
+	// TARA COLUMN
+	r.insertCell().textContent = getTaraLabel(actual, p);
+
+
+
+
+    });
+
+    container.appendChild(table);
+  });
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* =========================================
+   FINAL PLL REDRAW (FIXED ORDER)
+   ========================================= */
+
+function redrawPLL(){
+  buildPLLTables();
+}
+
+
+/* ===== TARA MODE CHANGE LISTENER (NEW) ===== */
+document.getElementById("taraMode")
+  ?.addEventListener("change", redrawPLL);
+/* ========================================== */
+
+
+/* ===== INITIAL DRAW (FORCE VISIBLE TABLES) ===== */
+setTimeout(redrawPLL, 0);
+
+
+
+/* EVENT HOOKS */
+["kundaliPivot","sign2signMode","kpMode","vedicMode"]
+.forEach(id=>{
+  document.getElementById(id)
+    ?.addEventListener("change", redrawPLL);
+});
+
+planets.forEach(p=>{
+  ["sign","deg","min","sec"].forEach(k=>{
+    document.getElementById(p+"_"+k)
+      ?.addEventListener("input", redrawPLL);
+  });
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</script>
+
+
+
+
+
+
 
 
 
