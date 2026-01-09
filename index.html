@@ -4276,29 +4276,60 @@ document.getElementById("taraMode")
    FULLY ISOLATED ENGINE
    ========================================================= */
 
+
+
+
+
 /* ---------- MAP CUSPS DYNAMICALLY ---------- */
+
+
+
 function getDynamicCuspalSubLord(dynamicBhava){
 
   const data = window.__lastSwissData;
   if(!data || !data.cusps) return "";
 
   const pivot = document.getElementById("kundaliPivot").value;
-  if(!pivot) return "";
 
-  /* Pivot = Lagna → behave like Table 4 */
+  /* =================================================
+     CASE 1 : LAGNA PIVOT
+     (EXACT SAME BEHAVIOR AS TABLE 4)
+     ================================================= */
   if(pivot === "Lagna"){
     return getCuspalSubLord(dynamicBhava);
   }
 
-  const pivotHouse = getHouseFromLagna(pivot);
+  /* =================================================
+     CASE 2 : CSL PIVOT (1CSL – 12CSL)
+     PURE CUSP-BASED ROTATION
+     ================================================= */
+  if(pivot.endsWith("CSL")){
 
-  if(!pivotHouse) return "";
+    const pivotCusp = parseInt(pivot, 10);
+    if(!pivotCusp) return "";
 
-  let originalBhava = pivotHouse + (dynamicBhava - 1);
-  while(originalBhava > 12) originalBhava -= 12;
+    /* Map Dynamic Bhava → Actual Cusp */
+    let actualCusp =
+      pivotCusp + (dynamicBhava - 1);
 
-  return getCuspalSubLord(originalBhava);
+    while(actualCusp > 12) actualCusp -= 12;
+    while(actualCusp <= 0) actualCusp += 12;
+
+    return getCuspalSubLord(actualCusp);
+  }
+
+  /* =================================================
+     CASE 3 : PLANET PIVOT
+     FALLBACK → SAME AS TABLE 4
+     ================================================= */
+  return getCuspalSubLord(dynamicBhava);
 }
+
+
+
+
+
+
 
 /* ---------- BUILD ONE DYNAMIC CUSP TABLE ---------- */
 function buildDynamicCuspalPromiseTable(bhava, planet){
