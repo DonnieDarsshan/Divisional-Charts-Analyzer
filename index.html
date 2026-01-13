@@ -92,6 +92,13 @@ table{
 }
 
 
+
+/* hide input table by default */
+#inputTable{
+  display:none;
+}
+
+
 th,td{
   border:1.5px solid rgba(16,185,129,0.65); /* stronger emerald grid */
   padding:8px;
@@ -702,11 +709,17 @@ Person Name :
     Ignore Minutes
   </label>
 
-  <label>
+  <label style="margin-right:14px">
     <input type="checkbox" id="ignoreSec" checked>
     Ignore Seconds
   </label>
+
+  <label>
+    <input type="checkbox" id="hideInputTable" checked onchange="toggleInputTable()">
+    Hide Input Table
+  </label>
 </div>
+
 
 
 
@@ -741,6 +754,20 @@ Person Name :
    ========================================================= */
 const signs=["","Aries","Taurus","Gemini","Cancer","Leo","Virgo",
              "Libra","Scorpio","Sagittarius","Capricorn","Aquarius","Pisces"];
+
+
+
+
+function toggleInputTable(){
+  const table = document.getElementById("inputTable");
+  const cb = document.getElementById("hideInputTable");
+
+  table.style.display = cb.checked ? "none" : "table";
+}
+
+
+
+
 
 const planets=[
   "Lagna",
@@ -993,6 +1020,17 @@ function clearAll(){
     document.getElementById(p+"_sec").value="";
   });
 }
+
+
+
+// ensure input table stays hidden on first load
+window.addEventListener("DOMContentLoaded", () => {
+  toggleInputTable();
+});
+
+
+
+
 </script>
 
 
