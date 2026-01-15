@@ -26,7 +26,23 @@
   --text:#ecfdf5;
   --accent:#d4af37;
   --glow:0 0 14px rgba(16,185,129,.45);
+
+/* ===== LEVEL ROW COLORS (USER-LOCKED EXACT COLORS) ===== */
+/* 1️⃣ Planet / Star Lord */
+--row-planet:  rgba(102,0,51,0.55);   /* #660033 */
+
+/* 2️⃣ Sub Lord / Star of Sub Lord */
+--row-sub:     rgba(0,0,179,0.50);    /* #0000b3 */
+
+/* 3️⃣ Sub-Sub / Star of Sub-Sub */
+--row-subsub:  rgba(89,0,179,0.55);   /* #5900b3 */
+
+
 }
+
+
+
+
 
 /* =========================
    GLOBAL
@@ -630,6 +646,78 @@ hr{
 
 
 
+
+
+
+/* =========================================================
+   LEVEL-BASED ROW COLORING
+   TABLE 2, 4, 5 ONLY
+   ========================================================= */
+
+/* =========================================================
+   LEVEL-BASED ROW COLORING (CHECKBOX CONTROLLED)
+   TABLE 2, 4, 5 ONLY
+   ========================================================= */
+
+
+
+
+/* =========================
+   LEVEL THEME — DARK → TOO DARK GRADIENTS
+   (NO LIGHT COLORS, NO PURPLE)
+   ========================= */
+
+body[data-level-theme="on"]
+#pllContainer tr.lvl-planet,
+body[data-level-theme="on"]
+#cuspalPromiseContainer tr.lvl-planet,
+body[data-level-theme="on"]
+#dynamicCuspalPromiseContainer tr.lvl-planet{
+  background: linear-gradient(
+    90deg,
+    #5a001f,   /* dark crimson */
+    #3f0016,   /* blood maroon */
+    #25000d    /* very dark wine */
+  );
+}
+
+body[data-level-theme="on"]
+#pllContainer tr.lvl-sub,
+body[data-level-theme="on"]
+#cuspalPromiseContainer tr.lvl-sub,
+body[data-level-theme="on"]
+#dynamicCuspalPromiseContainer tr.lvl-sub{
+  background: linear-gradient(
+    90deg,
+    #00004d,   /* deep royal blue */
+    #000033,   /* midnight blue */
+    #00001a    /* near-black blue */
+  );
+}
+
+body[data-level-theme="on"]
+#pllContainer tr.lvl-subsub,
+body[data-level-theme="on"]
+#cuspalPromiseContainer tr.lvl-subsub,
+body[data-level-theme="on"]
+#dynamicCuspalPromiseContainer tr.lvl-subsub{
+  background: linear-gradient(
+    90deg,
+    #003333,   /* dark teal */
+    #002020,   /* deep teal */
+    #001010    /* almost black teal */
+  );
+}
+
+
+
+
+
+
+
+
+
+
 </style>
 
 
@@ -718,6 +806,15 @@ Person Name :
     <input type="checkbox" id="hideInputTable" checked onchange="toggleInputTable()">
     Hide Input Table
   </label>
+  
+ <label style="margin-left:14px">
+  <input type="checkbox" id="levelThemeToggle" checked onchange="toggleLevelTheme()">
+	Level Theme
+
+</label>
+
+
+  
 </div>
 
 
@@ -764,6 +861,28 @@ function toggleInputTable(){
 
   table.style.display = cb.checked ? "none" : "table";
 }
+
+
+function toggleLevelTheme(){
+  if(document.getElementById("levelThemeToggle").checked){
+    document.body.setAttribute("data-level-theme","on");
+  }else{
+    document.body.removeAttribute("data-level-theme");
+  }
+}
+
+window.addEventListener("DOMContentLoaded", () => {
+  toggleInputTable();
+});
+
+
+/* ===== APPLY LEVEL THEME BY DEFAULT ON LOAD ===== */
+window.addEventListener("DOMContentLoaded", () => {
+  if(document.getElementById("levelThemeToggle")?.checked){
+    document.body.setAttribute("data-level-theme","on");
+  }
+});
+
 
 
 
@@ -1034,6 +1153,23 @@ window.addEventListener("DOMContentLoaded", () => {
 </script>
 
 
+<script>
+function applyLevelTheme(){
+
+  /* force repaint of Tables 2, 4, 5 */
+  document
+    .querySelectorAll(
+      "#pllContainer tr[class^='lvl-'], \
+       #cuspalPromiseContainer tr[class^='lvl-'], \
+       #dynamicCuspalPromiseContainer tr[class^='lvl-']"
+    )
+    .forEach(tr => {
+      tr.style.display = "none";
+      tr.offsetHeight; // force reflow
+      tr.style.display = "";
+    });
+}
+</script>
 
 
 
@@ -1061,8 +1197,12 @@ window.addEventListener("DOMContentLoaded", () => {
 
   <!-- ===== TARA MODE (NEW) ===== -->
   <span>Tara :</span>
-  <select id="taraMode">
-  <option value="Star Lord" selected>Star Lord</option>
+  
+  
+  
+<select id="taraMode">
+  <option value="SSL_OF_CHANDRA" selected>SSL OF Chandra</option>
+  <option value="Star Lord">Star Lord</option>
   <option value="Planet">Planet</option>
   <option value="Surya">Surya</option>
   <option value="Chandra">Chandra</option>
@@ -1073,8 +1213,14 @@ window.addEventListener("DOMContentLoaded", () => {
   <option value="Budha">Budha</option>
   <option value="Ketu">Ketu</option>
   <option value="Venus">Venus</option>
-  
 </select>
+
+
+
+
+
+
+
 
   <!-- =========================== -->
 
@@ -1105,7 +1251,7 @@ window.addEventListener("DOMContentLoaded", () => {
   </label>
   
   <label>
-  <input type="checkbox" id="trueNodeMode" checked>
+  <input type="checkbox" id="trueNodeMode">
   True Node
 </label>
 
@@ -3053,7 +3199,7 @@ const TARA_SEQUENCE = [
   "Sadhana",
   "Nidana",
   "Mithra",
-  "Ati-Mithra"
+  "Ati Mitra Shatru"
 ];
 
 /*
@@ -3085,10 +3231,25 @@ function getTaraLabel(actualPlanet, basePlanet){
 
   let janmaPlanet = "";
 
+
+
+
+
+
+
   /* =========================
-     MODE : STAR LORD (DEFAULT)
+     MODE : SSL OF CHANDRA (DEFAULT)
      ========================= */
-  if(mode === "Star Lord"){
+  if(mode === "SSL_OF_CHANDRA"){
+
+    // KP Sub-Sub Lord of Chandra
+    janmaPlanet = getSubSubLord("Chandra");
+  }
+
+  /* =========================
+     MODE : STAR LORD
+     ========================= */
+  else if(mode === "Star Lord"){
 
     if(pivot === "Lagna"){
       janmaPlanet = getStarLord("Lagna");
@@ -3108,10 +3269,21 @@ function getTaraLabel(actualPlanet, basePlanet){
      MODE : FIXED PLANET
      ========================= */
   else{
-    janmaPlanet = mode; // Chandra, Mangala, etc.
+    janmaPlanet = mode; // Surya, Chandra, Mangala, etc.
   }
 
-  if(!janmaPlanet || !actualPlanet) return "";
+
+
+
+
+
+
+
+
+
+  if(!janmaPlanet || !actualPlanet){
+    return "";
+  }
 
   let janmaIndex = TARA_PLANET_ORDER.indexOf(janmaPlanet);
   let actualIndex = TARA_PLANET_ORDER.indexOf(actualPlanet);
@@ -3411,9 +3583,29 @@ function buildPLLTables(){
       let actual = resolveEntity(p, level);
       if(!actual) return;
 
-      let r = table.insertRow();
+      
+	  
+	  
+	  
+	  
+	  let r = table.insertRow();
 
-      r.insertCell().textContent = level;
+		/* ===== LEVEL → ROW CLASS ===== */
+		if(level === "Planet" || level === "Star Lord"){
+		  r.classList.add("lvl-planet");
+		}
+		else if(level === "Sub Lord" || level === "Star of Sub Lord"){
+		  r.classList.add("lvl-sub");
+		}
+		else if(level === "Sub-Sub" || level === "Star of Sub-Sub"){
+		  r.classList.add("lvl-subsub");
+		}
+
+		r.insertCell().textContent = level;
+
+	  
+	  
+	  
       // Planet name with TENANTED indicator
 		let planetLabel = actual;
 
@@ -4216,9 +4408,29 @@ function buildCuspalPromiseTable(bhava, planet){
     let actual = resolveEntity(planet, level);
     if(!actual) return;
 
-    let r = table.insertRow();
+    
+	
+	
+	let r = table.insertRow();
 
-    r.insertCell().textContent = level;
+	/* ===== LEVEL → ROW CLASS ===== */
+	if(level === "Planet" || level === "Star Lord"){
+	  r.classList.add("lvl-planet");
+	}
+	else if(level === "Sub Lord" || level === "Star of Sub Lord"){
+	  r.classList.add("lvl-sub");
+	}
+	else if(level === "Sub-Sub" || level === "Star of Sub-Sub"){
+	  r.classList.add("lvl-subsub");
+	}
+
+	r.insertCell().textContent = level;
+
+	
+	
+	
+	
+	
 
     let label = actual + (isTenantedPlanet(actual) ? " $" : "");
     r.insertCell().textContent = label;
@@ -4409,7 +4621,22 @@ function buildDynamicCuspalPromiseTable(bhava, planet){
 
     let r = table.insertRow();
 
-    r.insertCell().textContent = level;
+	/* ===== LEVEL → ROW CLASS ===== */
+	if(level === "Planet" || level === "Star Lord"){
+	  r.classList.add("lvl-planet");
+	}
+	else if(level === "Sub Lord" || level === "Star of Sub Lord"){
+	  r.classList.add("lvl-sub");
+	}
+	else if(level === "Sub-Sub" || level === "Star of Sub-Sub"){
+	  r.classList.add("lvl-subsub");
+	}
+
+	r.insertCell().textContent = level;
+
+	
+	
+	
     r.insertCell().textContent =
       actual + (isTenantedPlanet(actual) ? " $" : "");
 
