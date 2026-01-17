@@ -73,6 +73,40 @@ h2{
   letter-spacing:4px;
   text-transform:uppercase;
 
+
+
+/* =========================
+   STICKY SECTION HEADINGS
+   ========================= */
+h2,
+h3{
+  position: sticky;
+  top: 68px;              /* below top controls */
+  z-index: 3000;
+  background: var(--bg-main);
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+/* prevent text clipping on stick */
+h2::before,
+h3::before{
+  content:"";
+  position:absolute;
+  top:-12px;
+  left:0;
+  right:0;
+  height:12px;
+  background:var(--bg-main);
+}
+
+
+
+
+
+
+
+
   /* TWO-COLOR GRADIENT TEXT */
   background:linear-gradient(
     90deg,
@@ -635,6 +669,30 @@ hr{
 }
 
 
+
+/* =========================
+   MINI BTR INPUTS (MM : SS)
+   ========================= */
+#tableNavBar .btrMiniBox{
+  all:unset;
+  width:24px;
+  height:24px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:6px;
+  font-size:12px;
+  font-weight:900;
+  text-align:center;
+  background:linear-gradient(135deg,#10b981,#d4af37);
+  color:#021b16;
+  box-shadow:0 0 6px rgba(16,185,129,.55);
+  cursor:text;
+  pointer-events:none;
+
+}
+
+
 #tableNavBar button:hover{
   background:linear-gradient(135deg,#34d399,#facc15);
 }
@@ -756,15 +814,59 @@ body[data-level-theme="on"]
 <!-- =========================================
      FLOATING TABLE NAVIGATION BAR
      ========================================= -->
+
+
+
 <div id="tableNavBar">
-  <button onclick="scrollToTable('nav1')">A</button>
-  <button onclick="scrollToTable('nav2')">B</button>
-  <button onclick="scrollToTable('table1')">1</button>
-  <button onclick="scrollToTable('table2')">2</button>
-  <button onclick="scrollToTable('table3')">3</button>
-  <button onclick="scrollToTable('table4')">4</button>
-  <button onclick="scrollToTable('table5')">5</button>
+
+  <button
+    type="button"
+    tabindex="-1"
+    onmousedown="event.preventDefault()"
+    onclick="shiftBTRSeconds(-60)">
+    &lt;
+  </button>
+
+
+		<input
+		  id="btrMiniMin"
+		  class="btrMiniBox"
+		  readonly
+		>
+
+		<span>:</span>
+
+		<input
+		  id="btrMiniSec"
+		  class="btrMiniBox"
+		  readonly
+		>
+
+
+  <button
+    type="button"
+    tabindex="-1"
+    onmousedown="event.preventDefault()"
+    onclick="shiftBTRSeconds(60)">
+    &gt;
+  </button>
+
+  <button type="button" onclick="scrollToTable('nav1')">A</button>
+  <button type="button" onclick="scrollToTable('nav2')">B</button>
+  <button type="button" onclick="scrollToTable('table1')">1</button>
+  <button type="button" onclick="scrollToTable('table2')">2</button>
+  <button type="button" onclick="scrollToTable('table3')">3</button>
+  <button type="button" onclick="scrollToTable('table4')">4</button>
+  <button type="button" onclick="scrollToTable('table5')">5</button>
+
 </div>
+
+
+
+
+
+
+
 
 
 
@@ -772,19 +874,53 @@ body[data-level-theme="on"]
 
 <h2 id="nav1">DIVISIONAL CHARTS ANALYZER</h2>
 
+
 <!-- =========================
-     PERSON NAME
+     PERSON NAME + DATE + TIME (SINGLE LINE)
      ========================= -->
-<div style="text-align:center;margin-bottom:12px;font-weight:700">
-Person Name :
-<input id="personName"
-  placeholder="ENTER NAME (MAX 20 CHARS)"
-  maxlength="20"
-  oninput="this.value=this.value
-    .toUpperCase()
-    .replace(/[^A-Z0-9\s]/g,'')">
+<div style="
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:14px;
+  margin-bottom:14px;
+  font-weight:800;
+  flex-wrap:wrap;
+">
+
+  <span>Person Name :</span>
+  <input id="personName"
+    style="width:180px"
+    placeholder="NAME"
+    maxlength="20"
+    oninput="this.value=this.value
+      .toUpperCase()
+      .replace(/[^A-Z0-9\s]/g,'')">
+
+  <span>Date :</span>
+  <input id="btr_dd" maxlength="2" placeholder="DD" style="width:36px">
+  <span>-</span>
+  <input id="btr_mm" maxlength="2" placeholder="MM" style="width:36px">
+  <span>-</span>
+  <input id="btr_yyyy" maxlength="4" placeholder="YYYY" style="width:64px">
+
+  <span>Time :</span>
+  <input id="btr_hh" maxlength="2" placeholder="HH" style="width:36px">
+  <span>:</span>
+  <input id="btr_min" maxlength="2" placeholder="MM" style="width:36px">
+  <span>:</span>
+  <input id="btr_sec" maxlength="2" placeholder="SS" style="width:36px">
 
 </div>
+
+
+
+
+
+
+
+
+
 
 <!-- =========================
      IGNORE MIN / SEC
@@ -851,6 +987,22 @@ Person Name :
    ========================================================= */
 const signs=["","Aries","Taurus","Gemini","Cancer","Leo","Virgo",
              "Libra","Scorpio","Sagittarius","Capricorn","Aquarius","Pisces"];
+
+
+
+/* =========================================================
+   BTR REFERENCE HEADINGS (ANCHOR POINTS)
+   ========================================================= */
+const BTR_REFERENCE_SELECTOR = `
+  h2[id^="table"],
+  h2[id^="nav"],
+  h3,
+  h2
+`;
+
+
+
+
 
 
 
@@ -1056,12 +1208,52 @@ function syncIgnoreFields(){
   });
 }
 
-ignoreMin.onchange = syncIgnoreFields;
-ignoreSec.onchange = syncIgnoreFields;
+ignoreMin.onchange = ()=>{
+  syncIgnoreFields();
+  lockPlanetInputs_BTR(true);
+};
+
+ignoreSec.onchange = ()=>{
+  syncIgnoreFields();
+  lockPlanetInputs_BTR(true);
+};
 
 /* initial sync */
 syncIgnoreFields();
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* =========================================================
+   BTR PATCH 5 — LOCK PLANET INPUTS
+   ========================================================= */
+function lockPlanetInputs_BTR(lock){
+
+  planets.forEach(p=>{
+
+    ["sign","deg","min","sec"].forEach(k=>{
+
+      let el = document.getElementById(p + "_" + k);
+      if(!el) return;
+
+      /* Allow Ignore toggles to control min/sec */
+      if(k === "min" && ignoreMin.checked) return;
+      if(k === "sec" && ignoreSec.checked) return;
+
+      el.disabled = lock;
+    });
+  });
+}
 
 
 
@@ -1146,6 +1338,14 @@ function clearAll(){
 window.addEventListener("DOMContentLoaded", () => {
   toggleInputTable();
 });
+
+
+
+
+
+
+
+
 
 
 
@@ -1401,15 +1601,22 @@ function formatDegMinSec(abs){
 
 
 
+
 /* =========================================================
-   GET ABSOLUTE DEGREE (FROM PART-1)
+   SINGLE SOURCE ABSOLUTE DEGREE
+   BTR → SWISS → UI (FALLBACK)
    ========================================================= */
-
-
 function getAbsDeg(entity){
 
   /* =========================
-     CUSP ENTITY (1CSL–12CSL)
+     1️⃣ BTR DYNAMIC REGISTRY
+     ========================= */
+  if(window.__btrAbs && typeof window.__btrAbs[entity] === "number"){
+    return ((window.__btrAbs[entity] % 360) + 360) % 360;
+  }
+
+  /* =========================
+     2️⃣ CUSP ENTITY (STATIC SWISS)
      ========================= */
   if(entity.endsWith("CSL")){
     const data = window.__lastSwissData;
@@ -1423,7 +1630,7 @@ function getAbsDeg(entity){
   }
 
   /* =========================
-     TRUE / MEAN NODE (RAW ONLY)
+     3️⃣ TRUE / MEAN NODE (RAW)
      ========================= */
   if(entity === "Rahu" || entity === "Ketu"){
 
@@ -1447,13 +1654,12 @@ function getAbsDeg(entity){
   }
 
   /* =========================
-     PLANET / LAGNA (UI INPUT)
+     4️⃣ UI FALLBACK (MANUAL)
      ========================= */
   let signEl = document.getElementById(entity+"_sign");
   if(!signEl) return null;
 
-  let sign = signEl.value;
-  let signIndex = signs.indexOf(sign);
+  let signIndex = signs.indexOf(signEl.value);
   if(signIndex <= 0) return null;
 
   let deg = +document.getElementById(entity+"_deg").value || 0;
@@ -1462,6 +1668,16 @@ function getAbsDeg(entity){
 
   return (signIndex - 1) * 30 + deg + min/60 + sec/3600;
 }
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2459,9 +2675,17 @@ const ENEMIES = {
 /* =========================================================
    GET PLANET STATE BY SIGN
    ========================================================= */
+   
+   
+   
 function getPlanetState(planet){
 
-  let sign = document.getElementById(planet+"_sign").value;
+  /* 🔥 BTR-AWARE SIGN RESOLUTION */
+  let abs = getAbsDeg(planet);
+  if(abs === null) return "";
+
+  let signIndex = Math.floor(abs / 30);
+  let sign = signs[signIndex + 1];
   if(!sign) return "";
 
   if(UCCHA[planet]?.includes(sign)) return "Uccha";
@@ -2475,6 +2699,10 @@ function getPlanetState(planet){
 
   return "";
 }
+
+
+
+
 </script>
 
 
@@ -3774,9 +4002,9 @@ function buildCuspalTable(){
     table.deleteRow(1);
   }
 
-  const data = window.__lastSwissData;
-  const cusps = data?.cusps || {};
-  if(!cusps) return;
+  /* BTR MODE — cusps come from dynamic inputs */
+if(!window.__lastSwissData) return;
+
 
   /* =========================
      DETERMINE PIVOT HOUSE
@@ -3809,7 +4037,7 @@ else if(pivot !== "Lagna"){
     /* ---------- Bhava (FIXED DISPLAY) ---------- */
     r.insertCell().textContent = displayBhava;
 
-    let abs = cusps[String(originalBhava)];
+    let abs = getAbsDeg(originalBhava + "CSL");
     if(typeof abs !== "number"){
 
       for(let i=0;i<6;i++) r.insertCell().textContent = "";
@@ -3976,6 +4204,50 @@ function absToSignDeg(abs){
 
 
 
+/* =========================================================
+   BTR INIT FROM SWISS META (UTC → LOCAL SAFE)
+   ========================================================= */
+function initBTRFromSwiss(meta){
+
+  if(!meta || !meta.datetime_utc) return;
+
+  /* Parse ISO UTC datetime */
+  const dt = new Date(meta.datetime_utc);
+  if(isNaN(dt.getTime())) return;
+
+  /* Fill UI boxes */
+  btr_dd.value   = String(dt.getDate()).padStart(2,"0");
+  btr_mm.value   = String(dt.getMonth()+1).padStart(2,"0");
+  btr_yyyy.value = dt.getFullYear();
+
+  btr_hh.value  = String(dt.getHours()).padStart(2,"0");
+  btr_min.value = String(dt.getMinutes()).padStart(2,"0");
+  btr_sec.value = String(dt.getSeconds()).padStart(2,"0");
+
+  /* Immutable base birth time */
+  window.__btrBaseTime =
+    new Date(dt.getTime());
+	syncMiniBTR();
+
+
+  /* Current working time (for rectification) */
+  window.__btrCurrentTime =
+    new Date(dt.getTime());
+	window.__btrReady = true;
+
+
+		syncBTRUIFromTime();
+
+/* 🔥 FORCE MINI BAR TO SHOW CHART TIME IMMEDIATELY */
+syncMiniBTR();
+
+recomputeFromBTR();
+
+
+}
+
+
+
 
 
 
@@ -3999,6 +4271,8 @@ function loadSwissJSON(){
 	try{
 	  data = JSON.parse(reader.result);
 	  window.__lastSwissData = data; // cache for True / Mean node toggle
+	  initBTRFromSwiss(data.meta);
+
 	}catch(err){
 	  alert("Invalid JSON file");
 	  return;
@@ -4015,11 +4289,40 @@ function loadSwissJSON(){
       /* ---------- NEW FORMAT ---------- */
       if(data.planets && typeof data.lagna === "number"){
 
-        /* META (OPTIONAL DISPLAY / FUTURE USE) */
-        if(data.meta?.name){
-          document.getElementById("personName").value =
-            data.meta.name.toUpperCase().slice(0,20);
-        }
+        /* META (NAME + DATE + TIME) */
+		if(data.meta){
+
+		  /* NAME */
+		  if(data.meta.name){
+			document.getElementById("personName").value =
+			  data.meta.name.toUpperCase().slice(0,20);
+		  }
+
+		  /* DATE : DD-MM-YYYY */
+		  if(data.meta.date){
+			let [yyyy,mm,dd] = data.meta.date.split("-");
+			if(dd && mm && yyyy){
+			  btr_dd.value = dd.padStart(2,"0");
+			  btr_mm.value = mm.padStart(2,"0");
+			  btr_yyyy.value = yyyy;
+			}
+		  }
+
+		  /* TIME : HH:MM:SS */
+		  if(data.meta.time){
+			let [hh,mi,ss] = data.meta.time.split(":");
+			btr_hh.value  = (hh||"00").padStart(2,"0");
+			btr_min.value = (mi||"00").padStart(2,"0");
+			btr_sec.value = (ss||"00").padStart(2,"0");
+		  }
+
+		  /* 🔒 STORE IMMUTABLE BASE TIMESTAMP */
+		  if(data.meta.date && data.meta.time){
+			window.__btrBaseTime =
+			  new Date(`${data.meta.date}T${data.meta.time}`);
+		  }
+		}
+
 
         /* LAGNA */
         let lag = absToSignDeg(data.lagna);
@@ -4096,6 +4399,8 @@ function loadSwissJSON(){
        // 🔥 FORCE FULL INITIAL DRAW AFTER SWISS LOAD
 		redrawAll();   // includes drawSIKundali + counter table
 		redrawPLL();   // ensure PLL sync
+		lockPlanetInputs_BTR(true);
+
 		return;
 
       }
@@ -4244,16 +4549,24 @@ function cuspOrdinal(n){
   return n + (n===1?"ST":n===2?"ND":n===3?"RD":"TH");
 }
 
+
+
+
+
 /* ---------- GET CUSPAL SUB LORD (FROM SWISS) ---------- */
 function getCuspalSubLord(bhava){
 
-  const data = window.__lastSwissData;
-  if(!data || !data.cusps) return "";
-
-  let abs = data.cusps[String(bhava)];
+  /* 🔥 BTR-AWARE CUSP SOURCE */
+  let abs = getAbsDeg(bhava + "CSL");
   if(typeof abs !== "number") return "";
 
   abs = ((abs % 360) + 360) % 360;
+
+
+
+
+
+
 
   let posInStar = abs % NAKSHATRA_LEN;
 
@@ -4818,6 +5131,373 @@ function getHouseFromLagna(entity){
 }
 
 </script>
+
+
+
+<script>
+/* =========================================================
+   BTR PATCH 3 — TIME SHIFT ENGINE (±48 HOURS)
+   NO LAGNA MOTION YET
+   ========================================================= */
+
+/* base timestamp must already exist (from PATCH 2) */
+window.__btrCurrentTime = new Date();
+
+
+/* hard cap : ±48 hours */
+const BTR_MAX_SHIFT_SEC = 48 * 60 * 60;
+
+/* ---------- INIT CURRENT TIME ---------- */
+function initBTRCurrentTime(){
+
+  let d  = Number(btr_dd.value);
+  let m  = Number(btr_mm.value) - 1;
+  let y  = Number(btr_yyyy.value);
+  let hh = Number(btr_hh.value);
+  let mm = Number(btr_min.value);
+  let ss = Number(btr_sec.value);
+
+  window.__btrBaseTime =
+    new Date(y, m, d, hh, mm, ss);
+
+  window.__btrCurrentTime =
+    new Date(window.__btrBaseTime.getTime());
+}
+
+/* ---------- SYNC UI FROM CURRENT TIME ---------- */
+function syncBTRUIFromTime(){
+  if(!window.__btrCurrentTime) return;
+
+  const d = window.__btrCurrentTime;
+
+  btr_dd.value   = String(d.getDate()).padStart(2,"0");
+  btr_mm.value   = String(d.getMonth()+1).padStart(2,"0");
+  btr_yyyy.value = d.getFullYear();
+
+  btr_hh.value  = String(d.getHours()).padStart(2,"0");
+  btr_min.value = String(d.getMinutes()).padStart(2,"0");
+  btr_sec.value = String(d.getSeconds()).padStart(2,"0");
+}
+
+/* ---------- HARD-CAPPED SHIFT ---------- */
+function shiftBTRSeconds(delta){
+
+  if(!window.__btrBaseTime || !window.__btrCurrentTime) return;
+
+  let next =
+    new Date(window.__btrCurrentTime.getTime() + delta*1000);
+
+  let diffSec =
+    (next.getTime() - window.__btrBaseTime.getTime()) / 1000;
+
+  if(Math.abs(diffSec) > BTR_MAX_SHIFT_SEC){
+    return; // 🔒 HARD STOP
+  }
+
+  window.__btrCurrentTime = next;
+syncBTRUIFromTime();
+
+/* 🔒 CAPTURE ACTIVE BTR REFERENCE */
+window.__btrActiveAnchor = (() => {
+  const refs = [...document.querySelectorAll(BTR_REFERENCE_SELECTOR)];
+  const topY = 90; // below floating bar
+  let best = null;
+  let bestDist = Infinity;
+
+  refs.forEach(el => {
+    const r = el.getBoundingClientRect();
+    if(r.top <= topY + 5 && r.bottom > topY){
+      const dist = Math.abs(r.top - topY);
+      if(dist < bestDist){
+        bestDist = dist;
+        best = el;
+      }
+    }
+  });
+
+  return best;
+})();
+
+recomputeFromBTR();
+
+
+}
+
+/* ---------- ARROW KEY HANDLER ---------- */
+document.addEventListener("keydown", e => {
+
+  const el = document.activeElement;
+  if(!el || !el.id) return;
+
+  let step = 0;
+
+  switch(el.id){
+    case "btr_sec": step = 1; break;
+    case "btr_min": step = 60; break;
+    case "btr_hh":  step = 3600; break;
+    case "btr_dd":  step = 86400; break;
+    default: return;
+  }
+
+  if(e.key === "ArrowUp"){
+    e.preventDefault();
+    shiftBTRSeconds(step);
+  }
+
+  if(e.key === "ArrowDown"){
+    e.preventDefault();
+    shiftBTRSeconds(-step);
+  }
+});
+
+/* ---------- MANUAL EDIT SYNC ---------- */
+function manualBTRSync(){
+
+  if(!window.__btrBaseTime) return;
+
+  let d = Number(btr_dd.value);
+  let m = Number(btr_mm.value) - 1;
+  let y = Number(btr_yyyy.value);
+
+  let hh = Number(btr_hh.value);
+  let mm = Number(btr_min.value);
+  let ss = Number(btr_sec.value);
+
+  let next = new Date(y,m,d,hh,mm,ss);
+
+  let diffSec =
+    (next.getTime() - window.__btrBaseTime.getTime()) / 1000;
+
+  if(Math.abs(diffSec) > BTR_MAX_SHIFT_SEC){
+    syncBTRUIFromTime(); // snap back
+    return;
+  }
+
+  window.__btrCurrentTime = next;
+}
+
+/* ---------- HOOK INPUTS ---------- */
+[btr_dd,btr_mm,btr_yyyy,btr_hh,btr_min,btr_sec]
+.forEach(el=>{
+  el.addEventListener("change", manualBTRSync);
+});
+
+/* ---------- AUTO INIT AFTER SWISS LOAD ---------- */
+document.addEventListener("swissLoaded", ()=>{
+  initBTRCurrentTime();
+  syncBTRUIFromTime();
+});
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+
+   
+   
+   
+   
+   
+   
+   
+   
+
+
+
+
+
+
+
+
+
+
+function recomputeFromBTR(){
+
+  if(window.__btrLock) return;
+  window.__btrLock = true;
+
+  if(
+    !window.__lastSwissData ||
+    !window.__btrBaseTime ||
+    !window.__btrCurrentTime
+  ){
+    window.__btrLock = false;
+    return;
+  }
+
+
+  const deltaSec =
+    (window.__btrCurrentTime.getTime() -
+     window.__btrBaseTime.getTime()) / 1000;
+
+  const shiftDeg = deltaSec / 240;
+
+  /* 🔥 SINGLE SOURCE OF TRUTH */
+  window.__btrAbs = {};
+
+  /* ===== LAGNA ===== */
+  window.__btrAbs["Lagna"] =
+    ((window.__lastSwissData.lagna + shiftDeg) % 360 + 360) % 360;
+
+  /* ===== CUSPS ===== */
+  if(window.__lastSwissData.cusps){
+    for(let i=1;i<=12;i++){
+      let base = window.__lastSwissData.cusps[i];
+      if(typeof base === "number"){
+        window.__btrAbs[i + "CSL"] =
+          ((base + shiftDeg) % 360 + 360) % 360;
+      }
+    }
+  }
+
+  /* ===== PLANETS ===== */
+  const basePlanets = window.__lastSwissData.planets || {};
+  Object.keys(basePlanets).forEach(p=>{
+    if(typeof basePlanets[p] === "number"){
+      window.__btrAbs[p] =
+        ((basePlanets[p] + shiftDeg) % 360 + 360) % 360;
+    }
+  });
+
+    /* ===== SYNC UI INPUTS FROM BTR (VISUAL ONLY) ===== */
+  Object.keys(window.__btrAbs).forEach(key => {
+
+    /* Skip CSL (no visible inputs) */
+    if(key.endsWith("CSL")) return;
+
+    const abs = window.__btrAbs[key];
+    if(typeof abs !== "number") return;
+
+    const d = absToSignDeg(abs);
+
+    if(document.getElementById(key + "_sign")){
+      document.getElementById(key + "_sign").value = d.sign;
+      document.getElementById(key + "_deg").value  = d.deg;
+      document.getElementById(key + "_min").value  = d.min;
+      document.getElementById(key + "_sec").value  = d.sec;
+    }
+  });
+
+
+
+		const anchor = window.__btrActiveAnchor;
+		let anchorOffset = 0;
+
+		if(anchor){
+		  anchorOffset = anchor.getBoundingClientRect().top;
+		}
+
+		redrawAll();
+
+		requestAnimationFrame(() => {
+		  if(anchor){
+			const newTop = anchor.getBoundingClientRect().top;
+			const delta = newTop - anchorOffset;
+			window.scrollBy(0, delta);
+		  }
+		  window.__btrLock = false;
+		});
+
+
+
+
+  
+}
+
+
+
+
+
+
+
+
+
+
+
+
+function syncMiniBTR(){
+
+  /* 🚫 do nothing until Swiss JSON initializes BTR */
+  if(!window.__btrReady || !window.__btrCurrentTime) return;
+
+  btrMiniMin.value =
+    String(window.__btrCurrentTime.getMinutes()).padStart(2,"0");
+
+  btrMiniSec.value =
+    String(window.__btrCurrentTime.getSeconds()).padStart(2,"0");
+}
+
+
+
+
+/* update mini inputs whenever main sync happens */
+const _oldSync = syncBTRUIFromTime;
+syncBTRUIFromTime = function(){
+  _oldSync();
+  syncMiniBTR();
+};
+
+
+
+
+
+
+
+
+/* manual typing in mini boxes */
+[btrMiniMin, btrMiniSec].forEach(el => {
+
+  /* react immediately on typing + arrows */
+  el.addEventListener("input", () => {
+
+    if(!window.__btrCurrentTime || !window.__btrBaseTime) return;
+
+    let m = parseInt(btrMiniMin.value,10);
+    let s = parseInt(btrMiniSec.value,10);
+
+    if(isNaN(m)) m = window.__btrCurrentTime.getMinutes();
+    if(isNaN(s)) s = window.__btrCurrentTime.getSeconds();
+
+    m = Math.max(0, Math.min(59, m));
+    s = Math.max(0, Math.min(59, s));
+
+    const d = new Date(window.__btrCurrentTime);
+    d.setMinutes(m);
+    d.setSeconds(s);
+
+    window.__btrCurrentTime = d;
+
+    /* 🔥 THIS WAS MISSING */
+    manualBTRSync();
+    recomputeFromBTR();
+  });
+
+});
+
+
+
+
+
+
+
+
+</script>
+
+
+
+
+
 
 
 
