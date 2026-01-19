@@ -1532,26 +1532,35 @@ const SI_SIGNS = [
   let sel = document.getElementById("kundaliPivot");
   sel.innerHTML = "";
 
-  /* ---------- PLANETS + LAGNA ---------- */
-  [
+  /* ---------- PLANETS + LAGNA (FIRST ROUND) ---------- */
+  const PLANET_LIST = [
     "Lagna","Surya","Chandra","Mangala","Rahu",
     "Jupiter","Saturn","Budha","Ketu","Venus"
-  ].forEach(p=>{
+  ];
+
+  PLANET_LIST.forEach(p=>{
     let o = document.createElement("option");
     o.value = p;
     o.text  = p;
     sel.appendChild(o);
   });
 
-  /* ---------- CSL PIVOTS (1 CSL = DUPLICATE OF LAGNA) ---------- */
+  /* ---------- PLANETS REPEATED AGAIN (SECOND ROUND) ---------- */
+  PLANET_LIST.slice(1).forEach(p=>{   // skip Lagna in repeat
+    let o = document.createElement("option");
+    o.value = p + "_2";              // internal unique key
+    o.text  = p;                     // visually same label
+    sel.appendChild(o);
+  });
+
+  /* ---------- CSL PIVOTS ---------- */
   for(let i = 1; i <= 12; i++){
     let o = document.createElement("option");
-    o.value = i + "CSL";      // internal key (used by logic)
-    o.text  = i + " CSL";     // UI label with SPACE
+    o.value = i + "CSL";
+    o.text  = i + " CSL";
     sel.appendChild(o);
   }
 
-  /* default */
   sel.value = "Lagna";
 })();
 
@@ -1611,9 +1620,16 @@ function getAbsDeg(entity){
   /* =========================
      1️⃣ BTR DYNAMIC REGISTRY
      ========================= */
-  if(window.__btrAbs && typeof window.__btrAbs[entity] === "number"){
-    return ((window.__btrAbs[entity] % 360) + 360) % 360;
-  }
+  // 🔒 BTR ABSOLUTE — EXCEPT RAHU / KETU
+	if(
+	  window.__btrAbs &&
+	  typeof window.__btrAbs[entity] === "number" &&
+	  entity !== "Rahu" &&
+	  entity !== "Ketu"
+	){
+	  return ((window.__btrAbs[entity] % 360) + 360) % 360;
+	}
+
 
   /* =========================
      2️⃣ CUSP ENTITY (STATIC SWISS)
@@ -2002,7 +2018,21 @@ Object.keys(buckets).forEach(sign => {
 list.forEach(p => {
   let d = document.createElement("div");
   d.className = (p.type === "cusp") ? "siCusp" : "";
-  d.textContent = p.text ?? `${p.label} ${Math.floor(p.deg)}°`;
+  
+  
+  
+	  let label = p.label;
+
+	if(isRetroPlanet(p.label)){
+	  label += " (R)";
+	}
+
+	d.textContent =
+	  p.text ?? `${label} ${Math.floor(p.deg)}°`;
+
+	  
+  
+  
   cell.querySelector(".siList").appendChild(d);
 });
 
@@ -2537,9 +2567,18 @@ if(window.__selectedCounterRows[p]){
 		/* Planet name with TENANTED indicator */
 		let planetLabel = p;
 
+		if(isRetroPlanet(p)){
+		  planetLabel += " (R)";
+		}
+
 		if(isTenantedPlanet(p)){
 		  planetLabel += " $";
 		}
+		
+		if(isInOwnStarOrSub(p)){
+		  planetLabel += " %";
+		}
+
 
 		r.insertCell().innerHTML = `<b>${planetLabel}</b>`;
 
@@ -2726,7 +2765,11 @@ function getPlanetState(planet){
    HOUSE FROM PIVOT — RETRO (BHAVA-CORRECT)
    EXACT MIRROR OF FORWARD LOGIC
    ========================================================= */
-function getRetroHouseFromPivot(entity){
+   
+   
+   
+   
+   function getRetroHouseFromPivot(entity){
 
   let pivot = document.getElementById("kundaliPivot").value;
 
@@ -2736,7 +2779,7 @@ function getRetroHouseFromPivot(entity){
   if(pivotAbs === null || entAbs === null) return 1;
 
   /* =========================================
-     MODE 1 : SIGN-TO-SIGN (DEGREELESS)
+     MODE 1 : SIGN-TO-SIGN (UNCHANGED)
      ========================================= */
   if(sign2signMode.checked){
     let pSign = Math.floor(pivotAbs / 30);
@@ -2749,17 +2792,12 @@ function getRetroHouseFromPivot(entity){
   }
 
   /* =========================================
-     MODE 2 : KP (0° BHAVA — BACKWARD)
+     MODE 2 : KP (PURE DEGREE BACKWARD)
+     IGNORE SIGNS COMPLETELY
      ========================================= */
   if(kpMode.checked){
 
-    /* force pivot to exact sign start */
-    let pivotStart = Math.floor(pivotAbs / 30) * 30;
-
-    let p = pivotStart;
-    let e = Math.floor(entAbs / 30) * 30;
-
-    let diff = p - e;
+    let diff = pivotAbs - entAbs;
     if(diff < 0) diff += 360;
 
     let house = Math.floor(diff / 30) + 1;
@@ -2769,19 +2807,13 @@ function getRetroHouseFromPivot(entity){
   }
 
   /* =========================================
-     MODE 3 : VEDIC (±15° BHAVA — BACKWARD)
+     MODE 3 : VEDIC (PURE DEGREE BACKWARD)
+     PIVOT DEGREE IS MIDPOINT
      ========================================= */
   if(vedicMode.checked){
 
-    let bhavaStart =
-      Math.floor(pivotAbs / 30) * 30 + 15;
-
-    bhavaStart = ((bhavaStart % 360) + 360) % 360;
-
-    let e = Math.floor(entAbs / 30) * 30 + 15;
-
-    let diff = bhavaStart - e;
-    diff = ((diff % 360) + 360) % 360;
+    let diff = pivotAbs - entAbs;
+    if(diff < 0) diff += 360;
 
     let house = Math.floor(diff / 30) + 1;
     if(house > 12) house -= 12;
@@ -2791,6 +2823,13 @@ function getRetroHouseFromPivot(entity){
 
   return 1;
 }
+
+
+
+
+
+
+
 </script>
 
 
@@ -3076,6 +3115,22 @@ TABLE 5 - DYNAMIC CUSPAL PROMISE READER
 
 
 <script>
+
+function isRetroPlanet(p){
+
+  if(!window.__planetRetro) return false;
+
+  // 🔒 STRICT ALLOWED RETRO PLANETS ONLY
+  const RETRO_ALLOWED = new Set([
+    "Surya","Chandra","Mangala",
+    "Budha","Jupiter","Venus","Saturn",
+    "Rahu","Ketu"
+  ]);
+
+  if(!RETRO_ALLOWED.has(p)) return false;
+
+  return window.__planetRetro[p] === true;
+}
 
 
 const PLANET_SHORT = {
@@ -3407,6 +3462,33 @@ function isTenantedPlanet(planet){
   return !starLordsPresent.has(planet);
 }
 
+
+
+
+
+
+
+
+/* =========================================================
+   CHECK IF PLANET SHARES STAR OR SUB LORD ( % SYMBOL )
+   ========================================================= */
+
+
+
+/* =========================================================
+   CHECK IF PLANET IS IN OWN STAR OR OWN SUB ( % SYMBOL )
+   ========================================================= */
+function isInOwnStarOrSub(planet){
+
+  // Lagna never qualifies
+  if(planet === "Lagna") return false;
+
+  const star = getStarLord(planet);
+  const sub  = getSubLord(planet);
+
+  // OWN STAR or OWN SUB
+  return (planet === star) || (planet === sub);
+}
 
 
 
@@ -3866,9 +3948,22 @@ function buildPLLTables(){
       // Planet name with TENANTED indicator
 		let planetLabel = actual;
 
+		if(isRetroPlanet(actual)){
+		  planetLabel += " (R)";
+		}
+
 		if(isTenantedPlanet(actual)){
 		  planetLabel += " $";
 		}
+		
+		
+		if(isInOwnStarOrSub(actual)){
+		  planetLabel += " %";
+		}
+
+
+		
+
 
 		r.insertCell().textContent = planetLabel;
 
@@ -4271,6 +4366,9 @@ function loadSwissJSON(){
 	try{
 	  data = JSON.parse(reader.result);
 	  window.__lastSwissData = data; // cache for True / Mean node toggle
+	  // ===== STORE RETROGRADE FLAGS (GLOBAL) =====
+	 window.__planetRetro = data.planets_retro || {};
+
 	  initBTRFromSwiss(data.meta);
 
 	}catch(err){
@@ -4774,7 +4872,21 @@ function buildCuspalPromiseTable(bhava, planet){
 	
 	
 
-    let label = actual + (isTenantedPlanet(actual) ? " $" : "");
+    let label = actual;
+
+	if(isRetroPlanet(actual)){
+	  label += " (R)";
+	}
+
+	if(isTenantedPlanet(actual)){
+	  label += " $";
+	}
+	
+	if(isInOwnStarOrSub(actual)){
+	  label += " %";
+	}
+
+
     r.insertCell().textContent = label;
 
     /* ---------- ROTATED OUTPUT (CUSPAL MODE SAFE) ---------- */
@@ -4979,9 +5091,17 @@ function buildDynamicCuspalPromiseTable(bhava, planet){
 	
 	
 	
-    r.insertCell().textContent =
-      actual + (isTenantedPlanet(actual) ? " $" : "");
+    let label = actual;
 
+	if(isTenantedPlanet(actual)){
+	  label += " $";
+	}
+
+	if(isInOwnStarOrSub(actual)){
+	  label += " %";
+	}
+
+	r.insertCell().textContent = label;
 
 
 
@@ -5362,8 +5482,40 @@ function recomputeFromBTR(){
   }
 
   /* ===== PLANETS ===== */
+  
+  
+  
+  
+  /* ===== RAHU / KETU — TRUE vs MEAN (BTR SAFE OVERRIDE) ===== */
+if(window.__rawRahuAbs != null){
+
+  const rahuBase =
+    USE_TRUE_NODE && window.__rawRahuTrueAbs != null
+      ? window.__rawRahuTrueAbs
+      : window.__rawRahuAbs;
+
+  window.__btrAbs["Rahu"] =
+    ((rahuBase + shiftDeg) % 360 + 360) % 360;
+}
+
+if(window.__rawKetuAbs != null){
+
+  const ketuBase =
+    USE_TRUE_NODE && window.__rawKetuTrueAbs != null
+      ? window.__rawKetuTrueAbs
+      : window.__rawKetuAbs;
+
+  window.__btrAbs["Ketu"] =
+    ((ketuBase + shiftDeg) % 360 + 360) % 360;
+}
+
+  
+  
+  
+  
   const basePlanets = window.__lastSwissData.planets || {};
   Object.keys(basePlanets).forEach(p=>{
+  if(p === "Rahu" || p === "Ketu" || p === "Rahu_true" || p === "Ketu_true") return;
     if(typeof basePlanets[p] === "number"){
       window.__btrAbs[p] =
         ((basePlanets[p] + shiftDeg) % 360 + 360) % 360;
@@ -5493,15 +5645,6 @@ syncBTRUIFromTime = function(){
 
 
 </script>
-
-
-
-
-
-
-
-
-
 
 
 
