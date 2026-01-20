@@ -731,13 +731,9 @@ body[data-level-theme="on"]
 #cuspalPromiseContainer tr.lvl-planet,
 body[data-level-theme="on"]
 #dynamicCuspalPromiseContainer tr.lvl-planet{
-  background: linear-gradient(
-    90deg,
-    #5a001f,   /* dark crimson */
-    #3f0016,   /* blood maroon */
-    #25000d    /* very dark wine */
-  );
+  background:#3f0016;
 }
+
 
 body[data-level-theme="on"]
 #pllContainer tr.lvl-sub,
@@ -745,13 +741,9 @@ body[data-level-theme="on"]
 #cuspalPromiseContainer tr.lvl-sub,
 body[data-level-theme="on"]
 #dynamicCuspalPromiseContainer tr.lvl-sub{
-  background: linear-gradient(
-    90deg,
-    #00004d,   /* deep royal blue */
-    #000033,   /* midnight blue */
-    #00001a    /* near-black blue */
-  );
+  background:#000033;
 }
+
 
 body[data-level-theme="on"]
 #pllContainer tr.lvl-subsub,
@@ -1700,7 +1692,11 @@ function getAbsDeg(entity){
 
 
 function getPivotAbs(entity){
-  return getAbsDeg(entity);
+
+  // normalize duplicate pivots (Surya_2 → Surya)
+  let base = entity.split("_")[0];
+
+  return getAbsDeg(base);
 }
 
 
@@ -1716,7 +1712,10 @@ function getPivotAbs(entity){
 
 function getPivotSign(entity){
 
-  let abs = getAbsDeg(entity);
+  // normalize duplicate pivots (Surya_2 → Surya)
+  let base = entity.split("_")[0];
+
+  let abs = getAbsDeg(base);
   if(abs === null) return "";
 
   let signIndex = Math.floor(abs / 30);
@@ -2026,6 +2025,13 @@ list.forEach(p => {
 	if(isRetroPlanet(p.label)){
 	  label += " (R)";
 	}
+	
+	
+	
+	if(isStarExchangePlanet(p.label)){
+	  label += " #";
+	}
+
 
 	d.textContent =
 	  p.text ?? `${label} ${Math.floor(p.deg)}°`;
@@ -2099,15 +2105,18 @@ TABLE 1 -  PLANET COUNTER TABLE
 
 <div style="display:flex;justify-content:center">
   <table id="counterTable" style="max-width:900px">
-  <tr>
-   <th>Planet</th>
-  <th>Forward</th>
-  <th>Lordship</th>
-  <th>Degree Difference</th>
-  <th>West Aspect</th>
-  <th>Retro</th>
-  <th>State</th>
-  </tr>
+<tr>
+ <th>Planet</th>
+ <th>Forward</th>
+ <th>Lordship</th>
+ <th>Summation</th>
+ <th>Tara</th>
+ <th>Degree Difference</th>
+ <th>West Aspect</th>
+ <th>Retro</th>
+ <th>State</th>
+</tr>
+
 </table>
 
 </div>
@@ -2135,15 +2144,17 @@ TABLE 1 -  PLANET COUNTER TABLE
 
 function getHouseFromPivot(entity){
 
-  let pivot = document.getElementById("kundaliPivot").value;
+  // normalize duplicate pivot (Surya_2 → Surya)
+  let pivot =
+    document.getElementById("kundaliPivot").value.split("_")[0];
 
-  let pivotAbs = getPivotAbs(pivot);
+  let pivotAbs = getAbsDeg(pivot);
   let entAbs   = getAbsDeg(entity);
 
   if(pivotAbs === null || entAbs === null) return 1;
 
   /* =========================================
-     MODE 1 : SIGN-TO-SIGN (DEGREELESS)
+     MODE 1 : SIGN-TO-SIGN
      ========================================= */
   if(sign2signMode.checked){
     let pSign = Math.floor(pivotAbs / 30);
@@ -2173,7 +2184,7 @@ function getHouseFromPivot(entity){
   }
 
   /* =========================================
-     MODE 3 : VEDIC (PURE BHAVA ±15°)
+     MODE 3 : VEDIC (±15°)
      ========================================= */
   if(vedicMode.checked){
 
@@ -2190,6 +2201,7 @@ function getHouseFromPivot(entity){
 
   return 1;
 }
+
 
 
 
@@ -2578,17 +2590,43 @@ if(window.__selectedCounterRows[p]){
 		if(isInOwnStarOrSub(p)){
 		  planetLabel += " %";
 		}
+		
+		if(isStarExchangePlanet(p)){
+		  planetLabel += " #";
+		}
+
 
 
 		r.insertCell().innerHTML = `<b>${planetLabel}</b>`;
 
 
+		// Forward
 		r.insertCell().textContent = fwd;
+
+		// Lordship
 		r.insertCell().textContent = lordships;
-		r.insertCell().textContent = diff !== "" ? diff.toFixed(2) + "°" : "";
+
+		// Summation (Forward + Lordship)
+		r.insertCell().textContent =
+		  getCounterSummation(fwd, lordships);
+
+		// Tara (ONLY this planet, based on selected Tara mode)
+		r.insertCell().textContent =
+		  getTaraLabel(p, p);
+
+		// Degree Difference
+		r.insertCell().textContent =
+		  diff !== "" ? diff.toFixed(2) + "°" : "";
+
+		// West Aspect
 		r.insertCell().textContent = aspect;
+
+		// Retro
 		r.insertCell().textContent = ret;
+
+		// State
 		r.insertCell().textContent = state;
+
 
 
 
@@ -2606,6 +2644,12 @@ if(window.__selectedCounterRows[p]){
    ========================================================= */
 document.getElementById("kundaliPivot")
   .addEventListener("change", buildCounterTable);
+
+
+/* 🔥 TARA MODE → TABLE 1 SYNC (FIX) */
+document.getElementById("taraMode")
+  ?.addEventListener("change", buildCounterTable);
+
 
 ["Lagna","Surya","Chandra","Mangala","Rahu",
  "Jupiter","Saturn","Budha","Ketu","Venus"].forEach(p=>{
@@ -3313,6 +3357,8 @@ function getAspectedBy(entity){
   let list = [];
 
   planets.forEach(p=>{
+
+    if(p === "Lagna") return;   // ❌ Lagna never aspects
     if(p === entity) return;
 
     /* ❌ remove Rahu ↔ Ketu mutual aspect */
@@ -3346,6 +3392,7 @@ function getAspectedBy(entity){
 
 
 
+
 function getSummation(planet){
 
   let set = new Set();
@@ -3362,6 +3409,28 @@ function getSummation(planet){
   lords.split(",").forEach(x=>{
     if(x) set.add(+x);
   });
+
+  return [...set].sort((a,b)=>a-b).join(",");
+}
+
+
+
+
+function getCounterSummation(forward, lordshipText){
+
+  let set = new Set();
+
+  // forward house
+  if(forward) set.add(+forward);
+
+  // lordship houses
+  if(lordshipText){
+    lordshipText
+      .split(",")
+      .map(x=>+x)
+      .filter(x=>!isNaN(x))
+      .forEach(x=>set.add(x));
+  }
 
   return [...set].sort((a,b)=>a-b).join(",");
 }
@@ -3489,6 +3558,32 @@ function isInOwnStarOrSub(planet){
   // OWN STAR or OWN SUB
   return (planet === star) || (planet === sub);
 }
+
+
+
+
+
+
+
+/* =========================================================
+   CHECK IF PLANET IS IN STAR EXCHANGE (# SYMBOL)
+   ========================================================= */
+function isStarExchangePlanet(planet){
+
+  // Lagna never participates
+  if(planet === "Lagna") return false;
+
+  const star = getStarLord(planet);
+  if(!star || star === planet) return false;
+
+  // mutual exchange
+  return getStarLord(star) === planet;
+}
+
+
+
+
+
 
 
 
@@ -3961,6 +4056,9 @@ function buildPLLTables(){
 		  planetLabel += " %";
 		}
 
+		if(isStarExchangePlanet(actual)){
+		  planetLabel += " #";
+		}
 
 		
 
@@ -4885,6 +4983,13 @@ function buildCuspalPromiseTable(bhava, planet){
 	if(isInOwnStarOrSub(actual)){
 	  label += " %";
 	}
+	
+	
+	
+	if(isStarExchangePlanet(actual)){
+	  label += " #";
+	}
+
 
 
     r.insertCell().textContent = label;
@@ -5100,6 +5205,13 @@ function buildDynamicCuspalPromiseTable(bhava, planet){
 	if(isInOwnStarOrSub(actual)){
 	  label += " %";
 	}
+	
+	
+	
+	if(isStarExchangePlanet(actual)){
+	  label += " #";
+	}
+
 
 	r.insertCell().textContent = label;
 
