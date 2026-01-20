@@ -11,6 +11,7 @@
 
 
 
+
 <style>
 /* =========================================================
    EMERALD MATRIX × EGYPTIAN TEMPLE
@@ -765,6 +766,98 @@ body[data-level-theme="on"]
 
 
 
+/* =========================================================
+   TABLE 1 – FORCE FULL WIDTH + NO WRAP (FIX SHRINK ISSUE)
+   ========================================================= */
+
+
+
+/* Planet column – NEVER wrap */
+#counterTable th:nth-child(1),
+#counterTable td:nth-child(1){
+  white-space: nowrap;           /* 🔒 prevent line break */
+  min-width: 180px;              /* enough for long labels */
+  font-weight: 900;
+}
+
+/* Forward & Retro – compact but readable */
+#counterTable th:nth-child(2),
+#counterTable td:nth-child(2),
+#counterTable th:nth-child(8),
+#counterTable td:nth-child(8){
+  width: 70px;
+  white-space: nowrap;
+}
+
+/* Lordship & Summation – allow space */
+#counterTable th:nth-child(3),
+#counterTable td:nth-child(3),
+#counterTable th:nth-child(4),
+#counterTable td:nth-child(4){
+  min-width: 110px;
+  white-space: nowrap;
+}
+
+/* Tara column */
+#counterTable th:nth-child(5),
+#counterTable td:nth-child(5){
+  min-width: 120px;
+  white-space: nowrap;
+}
+
+/* Degree Difference */
+#counterTable th:nth-child(6),
+#counterTable td:nth-child(6){
+  min-width: 120px;
+  white-space: nowrap;
+}
+
+/* West Aspect */
+#counterTable th:nth-child(7),
+#counterTable td:nth-child(7){
+  min-width: 120px;
+  white-space: nowrap;
+}
+
+/* State column */
+#counterTable th:nth-child(9),
+#counterTable td:nth-child(9){
+  min-width: 90px;
+  white-space: nowrap;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+/* =========================================================
+   TABLE 1 – TRUE AUTO-FIT (NO FIXED WIDTHS)
+   ========================================================= */
+
+#counterTable{
+  width:100%;
+  table-layout:auto;      /* 🔥 allow browser auto sizing */
+}
+
+/* Prevent wrapping ONLY for planet names */
+#counterTable th:first-child,
+#counterTable td:first-child{
+  white-space:nowrap;
+  font-weight:900;
+}
+
+/* Improve spacing for all columns */
+#counterTable th,
+#counterTable td{
+  padding:10px 12px;
+}
 
 
 
@@ -1202,16 +1295,25 @@ function syncIgnoreFields(){
 
 ignoreMin.onchange = ()=>{
   syncIgnoreFields();
-  lockPlanetInputs_BTR(true);
+
+  // 🔓 Only lock inputs if Swiss data is loaded
+  if(window.__lastSwissData){
+    lockPlanetInputs_BTR(true);
+  }
 };
 
 ignoreSec.onchange = ()=>{
   syncIgnoreFields();
-  lockPlanetInputs_BTR(true);
+
+  // 🔓 Only lock inputs if Swiss data is loaded
+  if(window.__lastSwissData){
+    lockPlanetInputs_BTR(true);
+  }
 };
 
-/* initial sync */
+/* initial sync — inputs remain editable */
 syncIgnoreFields();
+lockPlanetInputs_BTR(false);
 
 
 
@@ -1640,10 +1742,13 @@ function getAbsDeg(entity){
   /* =========================
      3️⃣ TRUE / MEAN NODE (RAW)
      ========================= */
-  if(entity === "Rahu" || entity === "Ketu"){
+
+
+	  if(entity === "Rahu" || entity === "Ketu"){
 
     let abs = null;
 
+    // 1️⃣ Swiss / BTR raw node (highest priority)
     if(entity === "Rahu"){
       abs = USE_TRUE_NODE
         ? window.__rawRahuTrueAbs
@@ -1656,10 +1761,34 @@ function getAbsDeg(entity){
         : window.__rawKetuAbs;
     }
 
-    if(typeof abs !== "number") return null;
+    // 2️⃣ If Swiss NOT loaded → FALL BACK TO MANUAL INPUT
+    if(typeof abs !== "number"){
+
+      let signEl = document.getElementById(entity + "_sign");
+      if(!signEl) return null;
+
+      let signIndex = signs.indexOf(signEl.value);
+      if(signIndex <= 0) return null;
+
+      let deg = +document.getElementById(entity + "_deg").value || 0;
+      let min = +document.getElementById(entity + "_min").value || 0;
+      let sec = +document.getElementById(entity + "_sec").value || 0;
+
+      return (signIndex - 1) * 30 + deg + min/60 + sec/3600;
+    }
 
     return ((abs % 360) + 360) % 360;
   }
+
+
+
+
+
+
+
+
+
+
 
   /* =========================
      4️⃣ UI FALLBACK (MANUAL)
@@ -2103,8 +2232,8 @@ TABLE 1 -  PLANET COUNTER TABLE
 </h2>
 
 
-<div style="display:flex;justify-content:center">
-  <table id="counterTable" style="max-width:900px">
+<div style="width:100%">
+  <table id="counterTable">
 <tr>
  <th>Planet</th>
  <th>Forward</th>
