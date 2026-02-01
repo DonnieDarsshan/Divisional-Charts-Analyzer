@@ -887,6 +887,59 @@ body[data-level-theme="on"]
 
 
 
+
+
+
+
+
+
+
+/* =========================================================
+   TABLE 1B & 1C – SAME ROW COLOR MARKING AS TABLE 1
+   (VIOLET + RED)
+   ========================================================= */
+
+/* ===== PURPLE / VIOLET ===== */
+#pivotDasaTable tr.selectedRow[data-color="purple"],
+#rahuKetuPivotTable tr.selectedRow[data-color="purple"]{
+  background:linear-gradient(
+    135deg,
+    rgba(102,0,204,0.28),
+    rgba(35,0,70,0.85)
+  );
+  box-shadow:
+    inset 0 0 16px rgba(160,100,255,0.5),
+    inset 0 0 2px rgba(0,0,0,0.8);
+}
+
+/* ===== MAROON / RED ===== */
+#pivotDasaTable tr.selectedRow[data-color="maroon"],
+#rahuKetuPivotTable tr.selectedRow[data-color="maroon"]{
+  background:linear-gradient(
+    135deg,
+    rgba(255,0,102,0.26),
+    rgba(50,0,25,0.82)
+  );
+  box-shadow:
+    inset 0 0 16px rgba(255,90,170,0.5),
+    inset 0 0 2px rgba(0,0,0,0.8);
+}
+
+/* ===== TEXT SAFETY ===== */
+#pivotDasaTable tr.selectedRow td,
+#rahuKetuPivotTable tr.selectedRow td{
+  color:#ffffff;
+  font-weight:normal;
+}
+
+
+
+
+
+
+
+
+
 </style>
 
 
@@ -2649,6 +2702,23 @@ function buildPivotDasaTable(){
 
     const r = table.insertRow();
 
+    /* ===== ROW COLOR SELECTION (TABLE 1 STYLE) ===== */
+    r.addEventListener("click", () => {
+
+      if(r.classList.contains("selectedRow")){
+        r.classList.remove("selectedRow");
+        r.removeAttribute("data-color");
+      }else{
+        const activeColor =
+          document.querySelector("#colorPalette .colorBox.active")
+            ?.dataset.color || "purple";
+
+        r.classList.add("selectedRow");
+        r.setAttribute("data-color", activeColor);
+      }
+
+    });
+
     r.insertCell().textContent = h;
     r.insertCell().textContent =
       `[ ${ZODIAC.indexOf(sign)+1} ] ${sign} – ${RASHI_NAMES[sign]}`;
@@ -2656,6 +2726,7 @@ function buildPivotDasaTable(){
     r.insertCell().textContent = lordsOfPivot || "";
     r.insertCell().textContent = fromPivot || "";
     r.insertCell().textContent = fromItsBhava || "";
+
   }
 }
 
@@ -2754,17 +2825,33 @@ function buildRahuKetuPivotTable(){
     const fromPivot = getHouseFromPivot(node);
 
     /* ---------- ROW ---------- */
-    const r = table.insertRow();
+        const r = table.insertRow();
+
+    /* ===== ROW COLOR SELECTION (TABLE 1 STYLE) ===== */
+    r.addEventListener("click", () => {
+
+      if(r.classList.contains("selectedRow")){
+        r.classList.remove("selectedRow");
+        r.removeAttribute("data-color");
+      }else{
+        const activeColor =
+          document.querySelector("#colorPalette .colorBox.active")
+            ?.dataset.color || "purple";
+
+        r.classList.add("selectedRow");
+        r.setAttribute("data-color", activeColor);
+      }
+
+    });
 
     r.insertCell().innerHTML = `<b>${node} (R)</b>`;
     r.insertCell().textContent =
       `[ ${nodeSignIndex + 1} ] ${nodeSign}`;
     r.insertCell().textContent = dispositor;
-
-    /* ✅ CORRECT COLUMN ORDER */
-    r.insertCell().textContent = fromNode;         // Rahu/Ketu → Dispositor
-    r.insertCell().textContent = dispLordships;    // Dispositor Planet Lordships
+    r.insertCell().textContent = fromNode;
+    r.insertCell().textContent = dispLordships;
     r.insertCell().textContent = fromPivot;
+
   });
 }
 
@@ -5170,6 +5257,47 @@ else if(pivot !== "Lagna"){
       ((pivotHouse + displayBhava - 2) % 12) + 1;
 
     const r = table.insertRow();
+	
+	
+	/* ===== ROW COLOR SELECTION (SAME AS TABLE 1) ===== */
+r.addEventListener("click", () => {
+
+  if(r.classList.contains("selectedRow")){
+    r.classList.remove("selectedRow");
+    r.removeAttribute("data-color");
+  }else{
+    const activeColor =
+      document.querySelector("#colorPalette .colorBox.active")
+        ?.dataset.color || "purple";
+
+    r.classList.add("selectedRow");
+    r.setAttribute("data-color", activeColor);
+  }
+
+});
+
+	
+	
+	/* ===== ROW COLOR SELECTION (SAME AS TABLE 1) ===== */
+r.addEventListener("click", () => {
+
+  if(r.classList.contains("selectedRow")){
+    r.classList.remove("selectedRow");
+    r.removeAttribute("data-color");
+  }else{
+    const activeColor =
+      document.querySelector("#colorPalette .colorBox.active")
+        ?.dataset.color || "purple";
+
+    r.classList.add("selectedRow");
+    r.setAttribute("data-color", activeColor);
+  }
+
+});
+
+
+
+
 
     /* ---------- Bhava (FIXED DISPLAY) ---------- */
     r.insertCell().textContent = displayBhava;
