@@ -4231,6 +4231,24 @@ TABLE 4 - STATIC CUSPAL PROMISE READER
 
 
 
+
+
+<script>
+document.getElementById("table4").style.cursor = "pointer";
+
+document.getElementById("table4").addEventListener("click", function(){
+  const container = document.getElementById("cuspalPromiseContainer");
+  if(!container) return;
+
+  if(container.style.display === "none"){
+    container.style.display = "";
+  }else{
+    container.style.display = "none";
+  }
+});
+</script>
+
+
 <div style="text-align:center;margin-bottom:14px;font-weight:800">
   <label>
     <input type="checkbox" id="rotateCuspalMode" checked>
@@ -4238,7 +4256,7 @@ TABLE 4 - STATIC CUSPAL PROMISE READER
   </label>
 </div>
 
-<div id="cuspalPromiseContainer"></div>
+<div id="cuspalPromiseContainer" style="display:none"></div>
 
 
 
@@ -4247,6 +4265,24 @@ TABLE 4 - STATIC CUSPAL PROMISE READER
 TABLE 5 - DYNAMIC CUSPAL PROMISE READER
 </h2>
 
+
+<script>
+document.getElementById("table5").style.cursor = "pointer";
+
+document.getElementById("table5").addEventListener("click", function(){
+  const container = document.getElementById("dynamicCuspalPromiseContainer");
+  if(!container) return;
+
+  if(container.style.display === "none"){
+    container.style.display = "";
+  }else{
+    container.style.display = "none";
+  }
+});
+</script>
+
+
+
 <div style="text-align:center;margin-bottom:14px;font-weight:800">
   <label>
     <input type="checkbox" id="rotateDynamicCuspalMode" checked>
@@ -4254,7 +4290,7 @@ TABLE 5 - DYNAMIC CUSPAL PROMISE READER
   </label>
 </div>
 
-<div id="dynamicCuspalPromiseContainer"></div>
+<div id="dynamicCuspalPromiseContainer" style="display:none"></div>
 
 
 
