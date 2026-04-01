@@ -1142,18 +1142,18 @@ tr.selectedRow[data-color="bloodred"] td {
       .replace(/[^A-Z0-9\s]/g,'')">
 
   <span>Date :</span>
-  <input id="btr_dd" maxlength="2" placeholder="DD" style="width:36px">
+  <input id="btr_dd" maxlength="2" placeholder="DD" style="width:48px">
   <span>-</span>
-  <input id="btr_mm" maxlength="2" placeholder="MM" style="width:36px">
+  <input id="btr_mm" maxlength="2" placeholder="MM" style="width:48px">
   <span>-</span>
-  <input id="btr_yyyy" maxlength="4" placeholder="YYYY" style="width:64px">
+  <input id="btr_yyyy" maxlength="4" placeholder="YYYY" style="width:76px">
 
   <span>Time :</span>
-  <input id="btr_hh" maxlength="2" placeholder="HH" style="width:36px">
+  <input id="btr_hh" maxlength="2" placeholder="HH" style="width:48px">
   <span>:</span>
-  <input id="btr_min" maxlength="2" placeholder="MM" style="width:36px">
+  <input id="btr_min" maxlength="2" placeholder="MM" style="width:48px">
   <span>:</span>
-  <input id="btr_sec" maxlength="2" placeholder="SS" style="width:36px">
+  <input id="btr_sec" maxlength="2" placeholder="SS" style="width:48px">
 
 </div>
 
@@ -1539,6 +1539,64 @@ function saveJSON(){
 
 
 
+/* =========================================================
+   MASTER UI RESET (CALL ON NEW CHART LOAD)
+   ========================================================= */
+function resetUIState() {
+  // 1. Reset Checkboxes to Initial HTML Defaults
+  const checks = {
+    ignoreMin: true, ignoreSec: true, hideInputTable: true,
+    levelThemeToggle: true, originalLagnaMode: true, showCuspMode: false,
+    westAspMode: true, trueNodeMode: false, rotateCuspalMode: true,
+    rotateDynamicCuspalMode: true, modeDateHide: true, modeKN: true
+  };
+  
+  for (let id in checks) {
+    if (document.getElementById(id)) document.getElementById(id).checked = checks[id];
+  }
+
+  // 2. Reset Radios
+  if(document.getElementById("moonBased")) document.getElementById("moonBased").checked = true;
+  if(document.getElementById("lagnaBased")) document.getElementById("lagnaBased").checked = false;
+
+  // 3. Reset Dropdowns
+  if(document.getElementById("kundaliPivot")) document.getElementById("kundaliPivot").value = "Lagna";
+  if(document.getElementById("taraMode")) document.getElementById("taraMode").value = "SSL_OF_CHANDRA";
+  if(document.getElementById("pllOrderSelect")) document.getElementById("pllOrderSelect").value = "__CHANDRA_STAR__";
+  if(document.getElementById("expandLevel")) document.getElementById("expandLevel").value = "2";
+  
+  // 4. Clear Overrides & Memories
+  window.__pllOrderOverride = "__CHANDRA_STAR__";
+  window.__selectedRasis = new Set();
+  window.__selectedCounterRows = {};
+  
+  if(document.getElementById("lagnaOverride")) {
+    document.getElementById("lagnaOverride").disabled = true;
+    delete document.getElementById("lagnaOverride").dataset.userTouched;
+  }
+
+  // 5. Reset Color Palette to Purple
+  document.querySelectorAll("#colorPalette .colorBox").forEach(b => b.classList.remove("active"));
+  let purpleBox = document.querySelector("#colorPalette .colorBox[data-color='purple']");
+  if(purpleBox) purpleBox.classList.add("active");
+  document.body.setAttribute("data-highlight", "purple");
+
+  // 6. Enforce Modes & Global Variables
+  if(typeof enforceMode === "function") enforceMode("kp"); // Resets Vedic/KP checkboxes
+  if(typeof toggleInputTable === "function") toggleInputTable();
+  if(typeof syncIgnoreFields === "function") syncIgnoreFields();
+  
+  if(document.getElementById("levelThemeToggle")) {
+    if(document.getElementById("levelThemeToggle").checked) {
+      document.body.setAttribute("data-level-theme","on");
+    } else {
+      document.body.removeAttribute("data-level-theme");
+    }
+  }
+  
+  if(typeof USE_TRUE_NODE !== "undefined") USE_TRUE_NODE = false;
+}
+
 function loadJSON(){
   let f=document.createElement("input");
   f.type="file"; 
@@ -1560,7 +1618,8 @@ function loadJSON(){
         document.getElementById(p+"_sec").value  = o.sec;
       });
 
-      /* 🔥 FORCE FULL REDRAW AFTER LOAD */
+      /* 🔥 RESET UI DEFAULTS, THEN FORCE FULL REDRAW */
+      resetUIState();
       redrawAll();
     };
 
@@ -6958,6 +7017,7 @@ function loadSwissJSON(){
 			}
 
        // 🔥 FORCE FULL INITIAL DRAW AFTER SWISS LOAD
+		resetUIState();
 		redrawAll();   // includes drawSIKundali + counter table
 		redrawPLL();   // ensure PLL sync
 		lockPlanetInputs_BTR(true);
@@ -6979,6 +7039,7 @@ function loadSwissJSON(){
         document.getElementById(p+"_sec").value  = v.sec;
       });
 
+      resetUIState();
       redrawAll();
       redrawPLL();
     };
