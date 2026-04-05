@@ -1102,6 +1102,7 @@ tr.selectedRow[data-color="bloodred"] td {
   <button type="button" onclick="scrollToTable('table3')">3</button>
   <button type="button" onclick="scrollToTable('table4')">4</button>
   <button type="button" onclick="scrollToTable('table5')">5</button>
+  <button type="button" onclick="scrollToTable('table6')">6</button>
 
 </div>
 
@@ -1767,6 +1768,11 @@ function applyLevelTheme(){
     <label>
       <input type="checkbox" id="vedicMode" checked>
       Vedic (15°)
+    </label>
+
+    <label style="color:#facc15;" title="Forces 30° equal houses from pivot when KP is selected">
+      <input type="checkbox" id="equalHouseMode" onchange="redrawAll()">
+      Equal
     </label>
 
     <label>
@@ -2935,13 +2941,13 @@ function getAbsDeg(entity){
 
     // 1️⃣ Swiss / BTR raw node (highest priority)
     if(entity === "Rahu"){
-      abs = USE_TRUE_NODE
+      abs = (USE_TRUE_NODE && window.__rawRahuTrueAbs != null)
         ? window.__rawRahuTrueAbs
         : window.__rawRahuAbs;
     }
 
     if(entity === "Ketu"){
-      abs = USE_TRUE_NODE
+      abs = (USE_TRUE_NODE && window.__rawKetuTrueAbs != null)
         ? window.__rawKetuTrueAbs
         : window.__rawKetuAbs;
     }
@@ -3066,25 +3072,33 @@ function getGlobalOffset(){
 
   let pivotDeg = pivotAbs % 30;
 
-  /* ===== KP MODE =====
-     0°–14°59′ → same sign at 0°
-     15°–29°59′ → next sign at 0°
-  */
-  
-  
-  if(kpMode.checked){
 
-	  /* CSL pivots never shift */
-	  if(pivot.endsWith("CSL")){
-		return 0;
-	  }
 
-	  let targetDeg = 0;
-	  if(pivotDeg >= 15){
-		targetDeg = 30;
-	  }
-	  return targetDeg - pivotDeg;
-	}
+
+
+
+
+
+/* ===== KP MODE ===== */
+      if(kpMode.checked){
+
+    	  /* CSL pivots never shift */
+    	  if(pivot.endsWith("CSL")){
+    		return 0;
+    	  }
+
+    	  let targetDeg = 0;
+          let isOrig = document.getElementById("originalLagnaMode")?.checked;
+          
+          // 🔥 Only shift to next sign if "Original" is UNCHECKED
+    	  if(!isOrig && pivotDeg >= 15){
+    		targetDeg = 30;
+    	  }
+    	  return targetDeg - pivotDeg;
+    	}
+
+
+
 
 
   /* ===== VEDIC MODE =====
@@ -3338,15 +3352,8 @@ if(document.getElementById("showCuspMode").checked){
 		if(displayC > 12) displayC -= 12;
 	  }
 
-	  /* 🔒 CUSPS MUST NEVER SHIFT IN KP MODE */
-	  let shifted;
-
-	  if(kpMode.checked){
-		shifted = abs;
-	  }else{
-		shifted = abs + offset;
-	  }
-
+	  /* 🔥 CUSPS MUST ALWAYS SHIFT WITH THE GLOBAL OFFSET (Matches Planets) */
+	  let shifted = abs + offset;
 	  shifted = ((shifted % 360) + 360) % 360;
 
 	  let signIndex = Math.floor(shifted / 30);
@@ -3995,19 +4002,58 @@ function buildRahuKetuPivotTable(){
       fromNode = ((dSign - nodeSignIndex + 12) % 12) + 1;
     }
 
-    /* -------- KP MODE (0°) -------- */
+    /* -------- KP MODE (TRUE CUSPS OR EQUAL) -------- */
     else if(kpMode.checked){
-      let pivotDeg = nodeAbs % 30;
-      let offset = -pivotDeg;
+      // 🔥 Rahu & Ketu are planets, so when they act as pivot, they MUST use equal 30° houses
+      let useEqual = true; 
+      let hasCusps = false;
 
-      let p = (nodeAbs + offset + 360) % 360;
-      let e = (dispAbs + offset + 360) % 360;
+      // 1. Try True Cusp Boundaries
+      if (!useEqual && window.__lastSwissData && window.__lastSwissData.cusps) {
+          let cusps = [];
+          for(let i=1; i<=12; i++) {
+              let cAbs = getAbsDeg(i + "CSL");
+              if(cAbs !== null) {
+                  cusps.push({ house: i, abs: ((cAbs % 360) + 360) % 360 });
+              }
+          }
+          if (cusps.length === 12) {
+              hasCusps = true;
+              cusps.sort((a,b) => a.abs - b.abs);
+              let getHouseOfDeg = (deg) => {
+                  for(let i=0; i<12; i++) {
+                      let c1 = cusps[i].abs;
+                      let c2 = cusps[(i+1)%12].abs;
+                      let h = cusps[i].house;
+                      if(c1 < c2) {
+                          if(deg >= c1 && deg < c2) return h;
+                      } else {
+                          if(deg >= c1 || deg < c2) return h;
+                      }
+                  }
+                  return 1;
+              };
+              
+              let pCuspHouse = getHouseOfDeg(nodeAbs); // Node acts as pivot
+              let eCuspHouse = getHouseOfDeg(dispAbs); // Dispositor is the entity
+              fromNode = eCuspHouse - pCuspHouse + 1;
+              if(fromNode <= 0) fromNode += 12;
+          }
+      }
 
-      let diff = e - p;
-      if(diff < 0) diff += 360;
+      // 2. Equal House Fallback
+      if(!hasCusps) {
+          let pivotDeg = nodeAbs % 30;
+          let isOrig = document.getElementById("originalLagnaMode")?.checked;
+          let offset = (!isOrig && pivotDeg >= 15) ? (30 - pivotDeg) : -pivotDeg;
 
-      fromNode = Math.floor(diff / 30) + 1;
-      if(fromNode > 12) fromNode -= 12;
+          let p = (nodeAbs + offset + 360) % 360;
+          let e = (dispAbs + offset + 360) % 360;
+          let diff = e - p;
+          if(diff < 0) diff += 360;
+          fromNode = Math.floor(diff / 30) + 1;
+          if(fromNode > 12) fromNode -= 12;
+      }
     }
 
     /* -------- VEDIC MODE (±15°) -------- */
@@ -4076,8 +4122,8 @@ function buildRahuKetuPivotTable(){
 function getHouseFromPivot(entity){
 
   // normalize duplicate pivot (Surya_2 → Surya)
-  let pivot =
-    document.getElementById("kundaliPivot").value.split("_")[0];
+  let pivotRaw = document.getElementById("kundaliPivot").value;
+  let pivot = pivotRaw.split("_")[0];
 
   let pivotAbs = getAbsDeg(pivot);
   let entAbs   = getAbsDeg(entity);
@@ -4096,22 +4142,80 @@ function getHouseFromPivot(entity){
   }
 
   /* =========================================
-     MODE 2 : KP (0° BHAVA)
+     MODE 2 : KP (TRUE CUSPS OR EQUAL)
      ========================================= */
   if(kpMode.checked){
+    
+    let hasCusps = false;
+    let pCuspHouse = 1;
+    let eCuspHouse = 1;
+    
+    // 🔥 AUTO-DETECT: If Pivot is a Planet -> Equal Houses (30°). If CSL -> True Cusps.
+    let useEqual = !pivot.endsWith("CSL");
+    if (document.getElementById("equalHouseMode")?.checked) {
+        useEqual = true; // Manual override
+    }
 
-    let pivotDeg = pivotAbs % 30;
-    let offset   = -pivotDeg;
+    // Load actual cuspal boundaries ONLY if 'Equal' is NOT checked
+    if (!useEqual && window.__lastSwissData && window.__lastSwissData.cusps) {
+        let cusps = [];
+        for(let i=1; i<=12; i++) {
+            let cAbs = getAbsDeg(i + "CSL");
+            if(cAbs !== null) {
+                cusps.push({ house: i, abs: ((cAbs % 360) + 360) % 360 });
+            }
+        }
+        
+        if (cusps.length === 12) {
+            hasCusps = true;
+            cusps.sort((a,b) => a.abs - b.abs);
+            
+            let getHouseOfDeg = (deg) => {
+                for(let i=0; i<12; i++) {
+                    let c1 = cusps[i].abs;
+                    let c2 = cusps[(i+1)%12].abs;
+                    let h = cusps[i].house;
+                    
+                    if(c1 < c2) {
+                        if(deg >= c1 && deg < c2) return h;
+                    } else {
+                        if(deg >= c1 || deg < c2) return h;
+                    }
+                }
+                return 1;
+            };
+            
+            pCuspHouse = getHouseOfDeg(pivotAbs);
+            eCuspHouse = getHouseOfDeg(entAbs);
+        }
+    }
 
-    let p = (pivotAbs + offset + 360) % 360;
-    let e = (entAbs   + offset + 360) % 360;
+    if (hasCusps) {
+        if (pivot.endsWith("CSL")) {
+            pCuspHouse = parseInt(pivot, 10);
+        }
+        let house = eCuspHouse - pCuspHouse + 1;
+        if(house <= 0) house += 12;
+        return house;
 
-    let diff = e - p;
-    if(diff < 0) diff += 360;
+    } else {
+        // FALLBACK: EQUAL 30° LOGIC
+        let pivotDeg = pivotAbs % 30;
+        let isOrig = document.getElementById("originalLagnaMode")?.checked;
+        
+        // 🔥 Apply the same 15° rule ONLY if "Original" is unchecked
+        let offset = (!isOrig && pivotDeg >= 15) ? (30 - pivotDeg) : -pivotDeg;
 
-    let house = Math.floor(diff / 30) + 1;
-    if(house > 12) house -= 12;
-    return house;
+        let p = (pivotAbs + offset + 360) % 360;
+        let e = (entAbs   + offset + 360) % 360;
+
+        let diff = e - p;
+        if(diff < 0) diff += 360;
+
+        let house = Math.floor(diff / 30) + 1;
+        if(house > 12) house -= 12;
+        return house;
+    }
   }
 
   /* =========================================
@@ -4132,7 +4236,6 @@ function getHouseFromPivot(entity){
 
   return 1;
 }
-
 
 
 
@@ -4362,32 +4465,34 @@ function getHouseLordships(planet){
 
 function getRahuKetuHouseLordships(node){
 
-  /* 1️⃣ Node sign */
-  
   let nodeSign = signs[Math.floor(getAbsDeg(node) / 30) + 1];
   if(!nodeSign) return "";
 
-  /* 2️⃣ Dispositor planet */
   let dispositor = SIGN_LORDS[nodeSign];
   if(!dispositor) return "";
 
   let houses = [];
 
-  /* 3️⃣ Houses ruled by dispositor (SIGN LORDSHIPS) */
+  /* 1️⃣ Houses ruled by dispositor (SIGN LORDSHIPS) */
   let ruled = getHouseLordships(dispositor)
     .split(",")
     .filter(x => x !== "")
     .map(Number);
-
   houses.push(...ruled);
 
-  /* 4️⃣ House where dispositor is PLACED */
+  /* 2️⃣ House where dispositor is PLACED (Follows Cusp Data) */
   let placedHouse = getHouseFromPivot(dispositor);
   if(placedHouse){
     houses.push(placedHouse);
   }
 
-  /* 5️⃣ Unique + sorted */
+  /* 3️⃣ House where NODE ITSELF is placed (Follows Cusp Data) */
+  let nodeHouse = getHouseFromPivot(node);
+  if(nodeHouse){
+    houses.push(nodeHouse);
+  }
+
+  /* Unique + sorted */
   houses = [...new Set(houses)].sort((a,b)=>a-b);
 
   return houses.join(",");
@@ -4874,9 +4979,8 @@ function getPlanetState(planet){
    
    
    
-   function getRetroHouseFromPivot(entity){
+function getRetroHouseFromPivot(entity){
 
-  // 🔥 NORMALIZE DUPLICATE PIVOT (Surya_2 → Surya)
   let pivotRaw = document.getElementById("kundaliPivot").value;
   let pivot = pivotRaw.endsWith("_2")
     ? pivotRaw.replace("_2","")
@@ -4886,10 +4990,6 @@ function getPlanetState(planet){
   let entAbs   = getAbsDeg(entity);
 
   if(pivotAbs === null || entAbs === null) return 1;
-
-
-
-
 
   /* =========================================
      MODE 1 : SIGN-TO-SIGN (UNCHANGED)
@@ -4905,26 +5005,83 @@ function getPlanetState(planet){
   }
 
   /* =========================================
-     MODE 2 : KP (PURE DEGREE BACKWARD)
-     IGNORE SIGNS COMPLETELY
+     MODE 2 : KP (TRUE CUSPS OR EQUAL)
      ========================================= */
   if(kpMode.checked){
+    let hasCusps = false;
+    let pCuspHouse = 1;
+    let eCuspHouse = 1;
+    
+    // 🔥 AUTO-DETECT: If Pivot is a Planet -> Equal Houses (30°). If CSL -> True Cusps.
+    let useEqual = !pivot.endsWith("CSL");
+    if (document.getElementById("equalHouseMode")?.checked) {
+        useEqual = true; // Manual override
+    }
 
-    let diff = pivotAbs - entAbs;
-    if(diff < 0) diff += 360;
+    if (!useEqual && window.__lastSwissData && window.__lastSwissData.cusps) {
+        let cusps = [];
+        for(let i=1; i<=12; i++) {
+            let cAbs = getAbsDeg(i + "CSL");
+            if(cAbs !== null) {
+                cusps.push({ house: i, abs: ((cAbs % 360) + 360) % 360 });
+            }
+        }
+        
+        if (cusps.length === 12) {
+            hasCusps = true;
+            cusps.sort((a,b) => a.abs - b.abs);
+            
+            let getHouseOfDeg = (deg) => {
+                for(let i=0; i<12; i++) {
+                    let c1 = cusps[i].abs;
+                    let c2 = cusps[(i+1)%12].abs;
+                    let h = cusps[i].house;
+                    
+                    if(c1 < c2) {
+                        if(deg >= c1 && deg < c2) return h;
+                    } else {
+                        if(deg >= c1 || deg < c2) return h;
+                    }
+                }
+                return 1;
+            };
+            
+            pCuspHouse = getHouseOfDeg(pivotAbs);
+            eCuspHouse = getHouseOfDeg(entAbs);
+        }
+    }
 
-    let house = Math.floor(diff / 30) + 1;
-    if(house > 12) house -= 12;
+    if (hasCusps) {
+        if (pivot.endsWith("CSL")) {
+            pCuspHouse = parseInt(pivot, 10);
+        }
+        // Backward math
+        let house = pCuspHouse - eCuspHouse + 1;
+        if(house <= 0) house += 12;
+        return house;
+    } else {
+        // FALLBACK: EQUAL 30° LOGIC
+        let pivotDeg = pivotAbs % 30;
+        let isOrig = document.getElementById("originalLagnaMode")?.checked;
+        let offset = (!isOrig && pivotDeg >= 15) ? (30 - pivotDeg) : -pivotDeg;
 
-    return house;
+        let p = (pivotAbs + offset + 360) % 360;
+        let e = (entAbs   + offset + 360) % 360;
+
+        let diff = p - e; // Retro is Pivot minus Entity
+        if(diff < 0) diff += 360;
+
+        let house = Math.floor(diff / 30) + 1;
+        if(house > 12) house -= 12;
+
+        return house;
+    }
   }
 
   /* =========================================
      MODE 3 : VEDIC (PURE DEGREE BACKWARD)
-     PIVOT DEGREE IS MIDPOINT
      ========================================= */
   if(vedicMode.checked){
-
     let diff = pivotAbs - entAbs;
     if(diff < 0) diff += 360;
 
@@ -4936,7 +5093,6 @@ function getPlanetState(planet){
 
   return 1;
 }
-
 
 
 
@@ -5111,6 +5267,9 @@ function redrawAll(){
   buildCuspalTable();
   buildCuspalPromiseReader();
   buildDynamicCuspalPromiseReader();
+  
+  /* 🔥 TRIGGER TABLE 6 REDRAW */
+  if(typeof buildVedicAspectsTable === "function") buildVedicAspectsTable();
 }
 
 
@@ -6890,6 +7049,14 @@ function loadSwissJSON(){
 	  // ===== STORE RETROGRADE FLAGS (GLOBAL) =====
 	  window.__planetRetro = data.planets_retro || {};
 
+      // 🔥 FIX 1: EXTRACT NODES EARLY SO BTR ENGINE SEES THEM IMMEDIATELY
+      if (data.planets) {
+          window.__rawRahuAbs     = data.planets.Rahu ?? null;
+          window.__rawKetuAbs     = data.planets.Ketu ?? null;
+          window.__rawRahuTrueAbs = data.planets.Rahu_true ?? null;
+          window.__rawKetuTrueAbs = data.planets.Ketu_true ?? null;
+      }
+
 	  initBTRFromSwiss(data.meta);
 
 	}catch(err){
@@ -7021,6 +7188,12 @@ function loadSwissJSON(){
 		redrawAll();   // includes drawSIKundali + counter table
 		redrawPLL();   // ensure PLL sync
 		lockPlanetInputs_BTR(true);
+        
+        // 🔥 FIX 2: FORCE A CLEAN RECOMPUTE AFTER ALL UI STATES ARE RESET
+        setTimeout(() => {
+            window.__btrLock = false;
+            if (typeof recomputeFromBTR === "function") recomputeFromBTR();
+        }, 50);
 
 		return;
 
@@ -8195,7 +8368,374 @@ syncBTRUIFromTime = function(){
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 </script>
+
+<hr>
+
+
+
+
+
+
+
+
+
+<style>
+/* =========================================================
+   TABLE 6 : CUSTOM VEDIC ASPECT STYLES (SOLID COLORS)
+   ========================================================= */
+/* First Row (Top Headings) - Dark Burgundy (#660033) with Yellow Text */
+#p2pTable th, #p2hTable th {
+    background: #660033 !important; /* 🔥 Using 'background' forces the global gradient to disappear */
+    color: #facc15 !important;
+    font-weight: 900;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    padding: 10px;
+}
+
+/* First Column (Planet Names) - Deep Purple */
+#p2pTable td:first-child, #p2hTable td:first-child {
+    background: #2d0066 !important; 
+    color: #facc15 !important;
+    font-weight: 900;
+    cursor: pointer;
+    border: 1px solid var(--border);
+}
+
+/* Hover State (Crosshair overlay) - High specificity */
+#vedicAspectsContainer th.vedic-hover-bg,
+#vedicAspectsContainer td.vedic-hover-bg {
+    background: rgba(16, 185, 129, 0.45) !important; 
+    color: #ffffff !important;
+}
+
+/* 🔥 Protect the Planet Placement Cell from Hover Color changes */
+#vedicAspectsContainer td.placement-cell,
+#vedicAspectsContainer td.placement-cell.vedic-hover-bg {
+    background: #590F00 !important;
+    color: #ffffff !important;
+}
+
+/* Active State (Multi-Select Click Highlight) */
+#vedicAspectsContainer th.vedic-active-bg,
+#vedicAspectsContainer td.vedic-active-bg {
+    background: rgba(139, 0, 0, 0.8) !important; 
+    color: #ffffff !important;
+}
+</style>
+
+
+
+
+
+
+
+
+
+
+
+<h2 id="table6" style="text-align:center">
+TABLE 6 - VEDIC ASPECTS
+</h2>
+
+<div style="text-align:center;margin-bottom:14px;font-weight:800">
+  <label>
+    <input type="checkbox" id="rkAspectsToggle" onchange="buildVedicAspectsTable()">
+    Rahu & Ketu Aspects: 3, 11 (Default is 5, 9)
+  </label>
+</div>
+
+<div id="vedicAspectsContainer">
+  <h3 style="text-align:center; color:#d4af37; margin-top:20px; font-size: 20px;">Planet to Planet Aspects (Vedic)</h3>
+  <div style="display:flex;justify-content:center; overflow-x:auto;">
+    <table id="p2pTable" style="max-width:1200px"></table>
+  </div>
+
+  <h3 style="text-align:center; color:#d4af37; margin-top:30px; font-size: 20px;">Planet To House Aspects (Vedic)</h3>
+  <div style="display:flex;justify-content:center; overflow-x:auto; margin-bottom: 40px;">
+    <table id="p2hTable" style="max-width:1200px"></table>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   TABLE 6 LOGIC : VEDIC ASPECTS & MULTI-SELECT INTERACTIONS
+   ========================================================= */
+
+const VEDIC_SHORT_NAMES = {
+    Surya: "Sury", Chandra: "Chnd", Mangala: "Kuja", Budha: "Buda",
+    Jupiter: "Jupt", Venus: "Vens", Saturn: "Shan", Rahu: "Rahu", Ketu: "Ketu"
+};
+
+function getVedicOrdinal(n) {
+    if(n === 3) return "3rd";
+    return n + "th";
+}
+
+
+
+
+
+
+
+
+function getDynamicVedicAspects(planet, isP2P) {
+    if (planet === "Saturn") return [3, 7, 10];
+    if (planet === "Mangala") return [4, 7, 8];
+    if (planet === "Jupiter") return [5, 7, 9];
+    if (planet === "Rahu" || planet === "Ketu") {
+        const alt = document.getElementById("rkAspectsToggle")?.checked;
+        
+        // Exclude 7th aspect for Planet to Planet, but include it for Planet to House
+        if (isP2P) {
+            return alt ? [3, 11] : [5, 9]; 
+        } else {
+            return alt ? [3, 7, 11] : [5, 7, 9]; 
+        }
+    }
+    return [7]; // Surya, Chandra, Venus, Budha
+}
+
+function buildVedicAspectsTable() {
+    const p2pTable = document.getElementById("p2pTable");
+    const p2hTable = document.getElementById("p2hTable");
+    if (!p2pTable || !p2hTable) return;
+
+    p2pTable.innerHTML = "";
+    p2hTable.innerHTML = "";
+
+    let starLord = getStarLord("Chandra") || "Ketu";
+    let startIndex = KP_DASHA_ORDER.indexOf(starLord);
+    let order = [];
+    for(let i=0; i<9; i++) {
+        order.push(KP_DASHA_ORDER[(startIndex + i) % 9]);
+    }
+
+    // =========================================
+    // PLANET TO PLANET TABLE
+    // =========================================
+    let p2pHeader = p2pTable.insertRow();
+    p2pHeader.appendChild(document.createElement("th")); // Empty top-left
+    order.forEach(p => {
+        let th = document.createElement("th");
+        th.innerHTML = `<b>${p}</b>`;
+        p2pHeader.appendChild(th);
+    });
+
+    order.forEach(p1 => {
+        let r = p2pTable.insertRow();
+        let firstCell = r.insertCell();
+        firstCell.innerHTML = `<b>${p1}</b>`;
+
+        let h1 = getHouseFromPivot(p1);
+        let aspects = getDynamicVedicAspects(p1, true); // true tells it to exclude the 7th aspect
+
+        order.forEach(p2 => {
+            let cell = r.insertCell();
+            if (p1 === p2) {
+                cell.textContent = "---";
+            } else {
+                let h2 = getHouseFromPivot(p2);
+                if(h1 && h2) {
+                    let dist = (h2 - h1 + 12) % 12 + 1;
+                    if (aspects.includes(dist)) {
+                        cell.textContent = getVedicOrdinal(dist);
+                        cell.style.color = "#facc15"; 
+                        cell.style.fontWeight = "bold";
+                    }
+                }
+            }
+        });
+    });
+
+    // =========================================
+    // PLANET TO HOUSE TABLE
+    // =========================================
+    let p2hHeader = p2hTable.insertRow();
+    p2hHeader.appendChild(document.createElement("th")); // Empty top-left
+    for(let h=1; h<=12; h++) {
+        let th = document.createElement("th");
+        th.innerHTML = `<b>${h}H</b>`;
+        p2hHeader.appendChild(th);
+    }
+
+    order.forEach(p1 => {
+        let r = p2hTable.insertRow();
+        let firstCell = r.insertCell();
+        firstCell.innerHTML = `<b>${p1}</b>`;
+
+        let h1 = getHouseFromPivot(p1);
+        let aspects = getDynamicVedicAspects(p1, false); // false tells it to include the 7th aspect
+        let shortName = VEDIC_SHORT_NAMES[p1] || p1;
+
+        for(let h=1; h<=12; h++) {
+            let cell = r.insertCell();
+            if (!h1) continue;
+
+            if (h === h1) {
+                cell.textContent = shortName;
+                cell.classList.add("placement-cell"); /* 🔥 This class protects it from hover overrides */
+                cell.style.backgroundColor = "#590F00"; 
+                cell.style.color = "#ffffff";           
+                cell.style.fontWeight = "normal";
+            } else {
+                let dist = (h - h1 + 12) % 12 + 1;
+                if (aspects.includes(dist)) {
+                    cell.textContent = getVedicOrdinal(dist);
+                    cell.style.color = "#facc15"; 
+                    cell.style.fontWeight = "bold";
+                }
+            }
+        }
+    });
+
+    // Attach Hover & Multi-Select Click Interactions
+    attachVedicInteractions("p2pTable");
+    attachVedicInteractions("p2hTable");
+}
+
+
+
+
+
+
+// =========================================================
+// HOVER & MULTI-SELECT CLICK HIGHLIGHT LOGIC
+// =========================================================
+function attachVedicInteractions(tableId) {
+    const table = document.getElementById(tableId);
+    if (!table) return;
+
+    let activeRows = new Set();
+    let activeCols = new Set();
+
+    const updateHighlights = () => {
+        // Clear old highlights
+        table.querySelectorAll('.vedic-active-bg').forEach(el => el.classList.remove('vedic-active-bg'));
+        
+        // Apply Row Highlights
+        activeRows.forEach(rowIdx => {
+            if (table.rows[rowIdx]) {
+                for (let i = 0; i < table.rows[rowIdx].cells.length; i++) { // Keeps click highlight on header
+                    table.rows[rowIdx].cells[i].classList.add('vedic-active-bg');
+                }
+            }
+        });
+
+        // Apply Column Highlights
+        activeCols.forEach(colIdx => {
+            for (let i = 0; i < table.rows.length; i++) { // Keeps click highlight on header
+                if (table.rows[i].cells[colIdx]) {
+                    table.rows[i].cells[colIdx].classList.add('vedic-active-bg');
+                }
+            }
+        });
+    };
+
+    // 1. TOP HEADING INTERACTIONS (Hover highlights column, Click toggles column)
+    const headers = table.rows[0].cells;
+    for (let i = 1; i < headers.length; i++) {
+        headers[i].addEventListener('click', () => {
+            if (activeCols.has(i)) activeCols.delete(i);
+            else activeCols.add(i);
+            updateHighlights();
+        });
+        
+        headers[i].addEventListener('mouseenter', () => {
+            for (let r = 1; r < table.rows.length; r++) { // 🔥 Changed from 0 to 1 to protect top header
+                if (table.rows[r].cells[i]) table.rows[r].cells[i].classList.add('vedic-hover-bg');
+            }
+        });
+        headers[i].addEventListener('mouseleave', () => {
+            table.querySelectorAll('.vedic-hover-bg').forEach(el => el.classList.remove('vedic-hover-bg'));
+        });
+    }
+
+    // 2. FIRST COLUMN INTERACTIONS (Hover highlights row, Click toggles row)
+    for (let i = 1; i < table.rows.length; i++) {
+        const firstCell = table.rows[i].cells[0];
+        
+        firstCell.addEventListener('click', () => {
+            if (activeRows.has(i)) activeRows.delete(i);
+            else activeRows.add(i);
+            updateHighlights();
+        });
+
+        firstCell.addEventListener('mouseenter', () => {
+            for (let c = 1; c < table.rows[i].cells.length; c++) { // 🔥 Changed from 0 to 1 to protect left header
+                table.rows[i].cells[c].classList.add('vedic-hover-bg');
+            }
+        });
+        firstCell.addEventListener('mouseleave', () => {
+            table.querySelectorAll('.vedic-hover-bg').forEach(el => el.classList.remove('vedic-hover-bg'));
+        });
+    }
+
+    // 3. CROSSHAIR HOVER LOGIC (Inner cells: Hover highlights both vertical and horizontal)
+    for (let i = 1; i < table.rows.length; i++) {
+        for (let j = 1; j < table.rows[i].cells.length; j++) {
+            const cell = table.rows[i].cells[j];
+            
+            cell.addEventListener('mouseenter', () => {
+                // Highlight Vertical (excluding top header)
+                for (let r = 1; r < table.rows.length; r++) { // 🔥 Changed to 1
+                    if (table.rows[r].cells[j]) table.rows[r].cells[j].classList.add('vedic-hover-bg');
+                }
+                // Highlight Horizontal (excluding left header)
+                for (let c = 1; c < table.rows[i].cells.length; c++) { // 🔥 Changed to 1
+                    table.rows[i].cells[c].classList.add('vedic-hover-bg');
+                }
+            });
+            
+            cell.addEventListener('mouseleave', () => {
+                table.querySelectorAll('.vedic-hover-bg').forEach(el => el.classList.remove('vedic-hover-bg'));
+            });
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Initial draw hook
+setTimeout(buildVedicAspectsTable, 100);
+document.getElementById("kundaliPivot")?.addEventListener("change", buildVedicAspectsTable);
+</script>
+
+
+
+
+
+
+
+
 
 
 
