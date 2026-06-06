@@ -691,7 +691,16 @@ tr.selectedRow[data-color="darkred"] td {
   border:1px solid var(--border);
   border-radius:12px;
   box-shadow:0 0 14px rgba(16,185,129,.45);
+  
+  /* 🔥 THE PATCH: Scales the entire bar down and pins it to the corner */
+  transform: scale(0.85); 
+  transform-origin: top right; 
 }
+
+
+
+
+
 
 #tableNavBar button{
   all:unset;                 /* 🔥 kill global button styles */
@@ -1061,50 +1070,59 @@ tr.selectedRow[data-color="bloodred"] td {
 
 
 
-<div id="tableNavBar">
-
-  <button
-    type="button"
-    tabindex="-1"
-    onmousedown="event.preventDefault()"
-    onclick="shiftBTRSeconds(-60)">
-    &lt;
-  </button>
 
 
-		<input
-		  id="btrMiniMin"
-		  class="btrMiniBox"
-		  readonly
-		>
-
-		<span>:</span>
-
-		<input
-		  id="btrMiniSec"
-		  class="btrMiniBox"
-		  readonly
-		>
 
 
-  <button
-    type="button"
-    tabindex="-1"
-    onmousedown="event.preventDefault()"
-    onclick="shiftBTRSeconds(60)">
-    &gt;
-  </button>
 
-  <button type="button" onclick="scrollToTable('nav1')">A</button>
-  <button type="button" onclick="scrollToTable('nav2')">B</button>
-  <button type="button" onclick="scrollToTable('table1')">1</button>
-  <button type="button" onclick="scrollToTable('table2')">2</button>
-  <button type="button" onclick="scrollToTable('table3')">3</button>
-  <button type="button" onclick="scrollToTable('table4')">4</button>
-  <button type="button" onclick="scrollToTable('table5')">5</button>
-  <button type="button" onclick="scrollToTable('table6')">6</button>
+<div id="tableNavBar" style="align-items: center;">
+
+  <button type="button" tabindex="-1" onmousedown="event.preventDefault()" onclick="shiftBTRSeconds(-60)">&lt;</button>
+  <input id="btrMiniMin" class="btrMiniBox" readonly>
+  <span style="color:#facc15; font-weight:900; margin: 0 -2px;">:</span>
+  <input id="btrMiniSec" class="btrMiniBox" readonly>
+  <button type="button" tabindex="-1" onmousedown="event.preventDefault()" onclick="shiftBTRSeconds(60)">&gt;</button>
+
+  <span style="color:var(--border); margin: 0 8px; opacity: 0.5;">|</span>
+
+
+  <!-- NEW: Global Occupied Toggle (Clean Style & Default On) -->
+  <label style="color:#facc15; font-size:13px; font-weight:800; cursor:pointer; display:flex; align-items:center; gap:4px; margin-right:4px;">
+    <input type="checkbox" id="removeOccupiedGlobal" checked> Occupied
+  </label>
+
+  <!-- NEW: Global Untenanted Toggle -->
+  <label style="color:#facc15; font-size:13px; font-weight:800; cursor:pointer; display:flex; align-items:center; gap:4px; margin-right:4px;">
+    <input type="checkbox" id="untenantedGlobal"> Untenanted
+  </label>
+
+  <label style="color:#ecfdf5; font-size:13px; font-weight:800; cursor:pointer; display:flex; align-items:center; gap:4px; margin-right:4px;">
+    <input type="checkbox" id="kpMode_top"> KP
+  </label>
+  
+  
+  <label style="color:#ecfdf5; font-size:13px; font-weight:800; cursor:pointer; display:flex; align-items:center; gap:4px; margin-right:4px;">
+    <input type="checkbox" id="sign2signMode_top"> Sign
+  </label>
+  <label style="color:#ecfdf5; font-size:13px; font-weight:800; cursor:pointer; display:flex; align-items:center; gap:4px; margin-right:4px;" title="Original Lagna Mode">
+    <input type="checkbox" id="originalLagnaMode_top"> Origin
+  </label>
+  <label style="color:#ecfdf5; font-size:13px; font-weight:800; cursor:pointer; display:flex; align-items:center; gap:4px; margin-right:4px;">
+    <input type="checkbox" id="trueNodeMode_top" checked> True
+  </label>
+
+  <span style="color:var(--border); margin: 0 4px; opacity: 0.5;">|</span>
+
+  <select id="kundaliPivot_top" style="background:#010a08; color:#facc15; border:1px solid #10b981; border-radius:6px; font-weight:800; font-size:13px; padding:4px 8px; outline:none; cursor:pointer; box-shadow:inset 0 0 6px rgba(16,185,129,.35);">
+    </select>
 
 </div>
+
+
+
+
+
+
 
 
 
@@ -1225,6 +1243,671 @@ tr.selectedRow[data-color="bloodred"] td {
   <button onclick="clearAll()">Clear All</button>
   <button onclick="loadSwissJSON()">Load Swiss Ephemeris</button>
 </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<style>
+    :root { 
+        --grid-line: #10b981;
+        --text-white: #ecfdf5; 
+        --asc-yellow: #facc15;
+    }
+
+    #onlineFetchBox { 
+        background: var(--panel);
+        border: 1px solid var(--grid-line);
+        border-radius: 8px;
+        box-shadow: 0 0 16px rgba(16,185,129,.25);
+        padding: 18px 22px; 
+        margin: 24px auto; 
+        display: flex; 
+        flex-direction: column;
+        gap: 15px; 
+        color: var(--text-white);
+        font-weight: 700; 
+        max-width: 100%; /* 🔥 Changed from 1200px to allow full stretch */
+    }
+    
+    .fetch-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        align-items: flex-end; 
+        width: 100%;
+    }
+    
+    #onlineFetchBox .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+    
+    #onlineFetchBox input, #onlineFetchBox select { 
+        background: #010a08;
+        color: var(--asc-yellow); 
+        border: 1px solid var(--grid-line); 
+        border-radius: 4px;
+        padding: 6px 10px; 
+        font-weight: 700; 
+        outline: none;
+    }
+    
+    #onlineFetchBox input:focus, #onlineFetchBox select:focus {
+        box-shadow: 0 0 8px rgba(16,185,129,.5);
+    }
+    
+    #onlineFetchBox select option { background: #010a08; color: #facc15; }
+
+    /* Action Buttons */
+    .action-btn {
+        font-weight: 900;
+        font-size: 14px; 
+        padding: 6px 14px; 
+        margin: 0;
+        cursor: pointer;
+        color: #021b16; 
+        border: none;
+        border-radius: 6px; 
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.6);
+        transition: all 0.1s ease;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .action-btn:hover { filter: brightness(1.25); }
+    .action-btn:active { transform: translateY(2px); }
+
+    .btn-clear { background: linear-gradient(135deg, #94a3b8, #475569); }
+    .btn-load { background: linear-gradient(135deg, #d97706, #9a3412); }
+    .btn-save { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+    .btn-fetch { background: linear-gradient(135deg, #10b981, #d4af37); }
+
+    .btn-fetch.success {
+        background: #39ff14 !important;
+        color: #000 !important;
+        box-shadow: 0 0 15px #39ff14 !important;
+    }
+</style>
+
+<div id="onlineFetchBox">
+    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(16,185,129,0.3); padding-bottom: 10px;">
+        <div style="color: #10b981; font-size: 16px; letter-spacing: 1px; flex: 1;">&#x1F310; CLOUD HOROSCOPE FETCHER</div>
+        <div style="display: flex; gap: 10px; align-items: center; justify-content: center; flex: 1;">
+            <span style="color: #ecfdf5; font-size: 13px;">Profile Name:</span>
+            <input type="text" id="onName" placeholder="e.g. NAME" style="width: 200px; text-align: center; text-transform: uppercase;">
+        </div>
+        <div style="flex: 1;"></div>
+    </div>
+ 
+    
+	
+	
+	
+	
+	
+	
+	<div class="fetch-row">
+        <div class="form-group">
+            <span style="font-size: 14px;">&#x1F4C5; Date (DD-MM-YYYY)</span>
+            <div style="display:flex; gap:8px; align-items:center;">
+                <input type="text" id="onDay" placeholder="DD" maxlength="2" style="width:50px; text-align:center; font-size: 14px;" onkeydown="arrowSpinner(event, 1, 31, 2)" oninput="smartJump(this, 'onMonth', 'day')"> -
+                <input type="text" id="onMonth" placeholder="MM" maxlength="2" style="width:50px; text-align:center; font-size: 14px;" onkeydown="arrowSpinner(event, 1, 12, 2)" oninput="smartJump(this, 'onYear', 'month')"> -
+                <input type="text" id="onYear" placeholder="YYYY" maxlength="4" style="width:75px; text-align:center; font-size: 14px;" onkeydown="arrowSpinner(event, 1900, 2100, 4)" oninput="smartJump(this, 'onHour', 'year')">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <span style="font-size: 14px;">&#x23F1; Time (HH:MM:SS)</span>
+            <div style="display:flex; gap:8px; align-items:center;">
+                <input type="text" id="onHour" placeholder="HH" maxlength="2" style="width:50px; text-align:center; font-size: 14px;" onkeydown="arrowSpinner(event, 0, 23, 2)" oninput="smartJump(this, 'onMin', 'hour')"> :
+                <input type="text" id="onMin" placeholder="MM" maxlength="2" style="width:50px; text-align:center; font-size: 14px;" onkeydown="arrowSpinner(event, 0, 59, 2)" oninput="smartJump(this, 'mapSearchQuery', 'minute')"> :
+                <input type="text" id="onSec" value="00" maxlength="2" style="width:50px; text-align:center; font-size: 14px;" onkeydown="arrowSpinner(event, 0, 59, 2)">
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <span style="font-size: 14px;">&#x1F4CD; Standard Places</span>
+            <select id="locationPreset" onchange="applyPresetLocation()" style="width: 190px; font-size: 14px;">
+                <option value="manual">Manual GPS (Default)</option>
+                <option value="13.3190737,77.1326306">Tumakuru</option>
+                <option value="12.918880,77.634986">Bengaluru</option>
+                <option value="13.315527,76.942059">Gubbi</option>
+                <option value="12.304776,76.655108">Mysore</option>
+            </select>
+        </div>
+    </div>
+    
+    <div class="fetch-row" style="margin-top: 10px;">
+        <div class="form-group" style="width: 100%;">
+            <span style="font-size: 15px;">&#x1F4CD; Coordinates: Latitude | Longitude | Lat (DMS) | Lon (DMS)</span>
+            <div style="display:flex; gap:10px; align-items:center; font-size: 14px;">
+                <input type="text" id="onlineLat" value="13.340077" style="width: 110px; font-size: 14px;" oninput="syncCoords('dec')">
+                <input type="text" id="onlineLon" value="77.100621" style="width: 110px; font-size: 14px;" oninput="syncCoords('dec')">
+                <span style="color:var(--grid-line); margin:0 8px;">|</span>
+                
+                <input type="text" id="dmsLatDeg" value="13" style="width:45px; text-align:center; font-size: 14px;" oninput="syncCoords('dms')"><span style="color:#facc15;">°</span>
+                <select id="dmsLatDir" style="padding:6px 4px; width:55px; font-size: 14px;" onchange="syncCoords('dms')">
+                    <option value="N" selected>N</option><option value="S">S</option>
+                </select>
+                <input type="text" id="dmsLatMin" value="20" style="width:45px; text-align:center; font-size: 14px;" oninput="syncCoords('dms')"><span style="color:#facc15;">'</span>
+                
+                <span style="color:var(--grid-line); margin:0 8px;">|</span>
+                
+                <input type="text" id="dmsLonDeg" value="77" style="width:45px; text-align:center; font-size: 14px;" oninput="syncCoords('dms')"><span style="color:#facc15;">°</span>
+                <select id="dmsLonDir" style="padding:6px 4px; width:55px; font-size: 14px;" onchange="syncCoords('dms')">
+                    <option value="E" selected>E</option><option value="W">W</option>
+                </select>
+                <input type="text" id="dmsLonMin" value="06" style="width:45px; text-align:center; font-size: 14px;" oninput="syncCoords('dms')"><span style="color:#facc15;">'</span>
+            </div>
+        </div>
+    </div>
+	
+	
+	
+	
+	
+	
+    
+    <div class="fetch-row" style="border-top: 1px solid rgba(16,185,129,0.3); padding-top: 15px; width: 100%;">
+        <div class="form-group" style="width: 100%;">
+            <span>&#x1F50D; Online Map Search</span>
+            <div style="display:flex; gap:6px; align-items: center;">
+                <input type="text" id="mapSearchQuery" placeholder="Search Place..." style="width: 200px;" onkeydown="if(event.key === 'Enter') searchOnlineMap()">
+                <button onclick="searchOnlineMap()" class="action-btn" style="background: var(--grid-line); color: #021b16;">Search</button>
+                <select id="mapSearchResults" style="display:none; width: 250px; margin: 0;" onchange="applyMapSelection()"></select>
+            </div>
+        </div>
+    </div>
+    
+    <div class="fetch-row" style="padding-top: 10px; justify-content: flex-end; width: 100%;">
+        <div style="display: flex; gap: 15px; align-items: center;">
+            <div id="serverWakeContainer" style="visibility: hidden; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; font-family: monospace; font-weight: bold;">
+                <span id="wakeMessage" style="color: #facc15; font-size: 14px;">> SYS.WAKE...</span>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span id="digitalClockPart" style="font-size: 28px; letter-spacing: 2px; color: #facc15;">00:30</span>
+                    <span id="progressBarPart" style="color: #10b981; font-size: 16px; letter-spacing: 1px;">[....................]</span>
+                </div>
+            </div>
+
+            <button class="action-btn btn-clear" onclick="clearFetchData()">&#x1F9F9; Clear</button>
+            <input type="file" id="loadProfileInput" accept=".json" style="display:none" onchange="loadCloudProfile(event)">
+            <button class="action-btn btn-load" onclick="document.getElementById('loadProfileInput').click()">&#x1F4C2; Load Profile</button>
+            <button class="action-btn btn-save" onclick="saveCloudProfile()">&#x1F4BE; Save Profile</button>
+            <button id="fetchCloudBtn" class="action-btn btn-fetch" onclick="fetchFromCloud()">Fetch Data &#x1F4E1;</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- SERVER COLD START ---
+    document.addEventListener("DOMContentLoaded", () => {
+        fetch('https://donnie-astro-engine.onrender.com/', { method: 'GET', mode: 'no-cors' }).catch(() => {});
+    });
+
+    // --- COORDINATE SYNC ---
+    function syncCoords(source) {
+        if(source === 'dec') {
+            let lat = parseFloat(document.getElementById('onlineLat').value) || 0;
+            let lon = parseFloat(document.getElementById('onlineLon').value) || 0;
+            document.getElementById('dmsLatDir').value = lat >= 0 ? 'N' : 'S';
+            lat = Math.abs(lat);
+            document.getElementById('dmsLatDeg').value = Math.floor(lat);
+            document.getElementById('dmsLatMin').value = Math.floor((lat - Math.floor(lat)) * 60).toString().padStart(2, '0');
+            document.getElementById('dmsLonDir').value = lon >= 0 ? 'E' : 'W';
+            lon = Math.abs(lon);
+            document.getElementById('dmsLonDeg').value = Math.floor(lon);
+            document.getElementById('dmsLonMin').value = Math.floor((lon - Math.floor(lon)) * 60).toString().padStart(2, '0');
+        } else if (source === 'dms') {
+            let latDeg = parseFloat(document.getElementById('dmsLatDeg').value) || 0;
+            let latMin = parseFloat(document.getElementById('dmsLatMin').value) || 0;
+            let latDir = document.getElementById('dmsLatDir').value;
+            let lat = latDeg + (latMin / 60);
+            if (latDir === 'S') lat = -lat;
+            let lonDeg = parseFloat(document.getElementById('dmsLonDeg').value) || 0;
+            let lonMin = parseFloat(document.getElementById('dmsLonMin').value) || 0;
+            let lonDir = document.getElementById('dmsLonDir').value;
+            let lon = lonDeg + (lonMin / 60);
+            if (lonDir === 'W') lon = -lon;
+            document.getElementById('onlineLat').value = lat.toFixed(6);
+            document.getElementById('onlineLon').value = lon.toFixed(6);
+        }
+    }
+
+    function applyPresetLocation() {
+        const val = document.getElementById("locationPreset").value;
+        if (val === "manual") {
+            document.getElementById("onlineLat").value = "13.340077";
+            document.getElementById("onlineLon").value = "77.100621";
+        } else {
+            const coords = val.split(",");
+            document.getElementById("onlineLat").value = coords[0];
+            document.getElementById("onlineLon").value = coords[1];
+        }
+        syncCoords('dec');
+    }
+
+    let currentMapResults = [];
+
+    async function searchOnlineMap() {
+        const query = document.getElementById("mapSearchQuery").value.trim();
+        if (!query) return;
+
+        const btn = document.querySelector("button[onclick='searchOnlineMap()']");
+        const origText = btn.innerHTML;
+        btn.innerHTML = "Searching...";
+        btn.disabled = true;
+        try {
+            const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=10&q=${encodeURIComponent(query)}`);
+            const data = await response.json();
+            const resultsDropdown = document.getElementById("mapSearchResults");
+            resultsDropdown.innerHTML = "";
+            if (data && data.length > 0) {
+                currentMapResults = data;
+                const defaultOpt = document.createElement("option");
+                defaultOpt.text = `-- Found ${data.length} places. Select one --`;
+                defaultOpt.value = "";
+                resultsDropdown.appendChild(defaultOpt);
+                data.forEach((place, index) => {
+                    const opt = document.createElement("option");
+                    opt.text = place.display_name.length > 60 ? place.display_name.substring(0, 57) + "..." : place.display_name;
+                    opt.value = index; 
+                    resultsDropdown.appendChild(opt);
+                });
+                resultsDropdown.style.display = "block";
+            } else {
+                resultsDropdown.style.display = "none";
+            }
+        } catch (error) {
+            console.warn("Network error while searching the map.");
+        } finally {
+            btn.innerHTML = origText;
+            btn.disabled = false;
+        }
+    }
+
+    function applyMapSelection() {
+        const dropdown = document.getElementById("mapSearchResults");
+        if (dropdown.value !== "") {
+            const selectedPlace = currentMapResults[dropdown.value];
+            document.getElementById("onlineLat").value = parseFloat(selectedPlace.lat).toFixed(6);
+            document.getElementById("onlineLon").value = parseFloat(selectedPlace.lon).toFixed(6);
+            document.getElementById("locationPreset").value = "manual";
+            syncCoords('dec');
+        }
+    }
+
+    function arrowSpinner(e, min, max, padding) {
+        if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+            e.preventDefault();
+            let val = parseInt(e.target.value);
+            if (isNaN(val)) val = max > 2000 ? new Date().getFullYear() : min;
+            if (e.key === "ArrowUp") val++;
+            if (e.key === "ArrowDown") val--;
+            if (val > max) val = min;
+            if (val < min) val = max;
+            e.target.value = String(val).padStart(padding, '0');
+        }
+    }
+
+    function smartJump(currentElement, nextElementId, type) {
+        let val = currentElement.value.replace(/\D/g, '');
+        currentElement.value = val;
+        if (val.length === 0) return;
+        let shouldJump = false;
+        
+        if (type === 'year') {
+            if (val.length >= 4) shouldJump = true;
+        } else {
+            if (val.length >= 2) shouldJump = true;
+            else if (val.length === 1) {
+                let num = parseInt(val);
+                if (type === 'day' && num >= 4) shouldJump = true;
+                if (type === 'month' && num >= 2) shouldJump = true;
+                if (type === 'hour' && num >= 3) shouldJump = true;
+                if (type === 'minute' && num >= 6) shouldJump = true;
+            }
+        }
+        if (shouldJump) {
+            if (type !== 'year' && val.length === 1) currentElement.value = "0" + val;
+            document.getElementById(nextElementId).focus();
+        }
+    }
+
+    function clearFetchData() {
+        document.getElementById("onName").value = "";
+        document.getElementById("onDay").value = "";
+        document.getElementById("onMonth").value = "";
+        document.getElementById("onYear").value = "";
+        document.getElementById("onHour").value = "";
+        document.getElementById("onMin").value = "";
+        document.getElementById("onSec").value = "00";
+    }
+
+    let wakeInterval = null;
+    
+    /* =========================================================
+       NATIVE FETCH ENGINE (MAPPED DIRECTLY TO APP STATE)
+    ========================================================= */
+    async function fetchFromCloud() {
+        const d = document.getElementById("onDay").value;
+        const m = document.getElementById("onMonth").value;
+        const y = document.getElementById("onYear").value;
+        const hr = document.getElementById("onHour").value;
+        const min = document.getElementById("onMin").value;
+        const sec = document.getElementById("onSec").value || "00";
+        const latVal = document.getElementById("onlineLat").value;
+        const lonVal = document.getElementById("onlineLon").value;
+
+        if (!d || !m || !y || !hr || !min || !latVal || !lonVal) {
+            console.warn("Please fill in the full Date, Hour, Minute, and Coordinates.");
+            return;
+        }
+
+        let dynamicOffset = 330;
+        try {
+            const tzResponse = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latVal}&longitude=${lonVal}&timezone=auto`);
+            const tzData = await tzResponse.json();
+            if (tzData && tzData.utc_offset_seconds !== undefined) {
+                dynamicOffset = tzData.utc_offset_seconds / 60;
+            }
+        } catch (error) {
+            console.warn("Timezone fetch failed. Falling back to IST.");
+        }
+
+        const requestData = {
+            year: parseInt(y),
+            month: parseInt(m),
+            day: parseInt(d),
+            hour: parseInt(hr),
+            minute: parseInt(min),
+            second: parseInt(sec),
+            lat: parseFloat(latVal),
+            lon: parseFloat(lonVal),
+            timezone_offset: dynamicOffset,
+            horary_mode: false,
+            ayanamsha: "kp_new"
+        };
+
+        const btn = document.getElementById("fetchCloudBtn");
+        const originalText = btn.innerHTML;
+        btn.innerHTML = "Fetching Data... &#x23F3;";
+        btn.disabled = true;
+
+        const wakeContainer = document.getElementById("serverWakeContainer");
+        const wakeMessage = document.getElementById("wakeMessage");
+        const digitalClockPart = document.getElementById("digitalClockPart");
+        const progressBarPart = document.getElementById("progressBarPart");
+
+        if (wakeContainer) {
+            wakeContainer.style.visibility = "visible";
+            wakeMessage.innerText = "> INITIATING_LINK...";
+            let secondsElapsed = 0;
+            digitalClockPart.innerText = "00:00";
+            progressBarPart.innerText = "[" + ".".repeat(20) + "]";
+            if (wakeInterval) clearInterval(wakeInterval);
+
+            wakeInterval = setInterval(() => {
+                secondsElapsed++;
+                digitalClockPart.innerText = String(Math.floor(secondsElapsed / 60)).padStart(2, '0') + ":" + String(secondsElapsed % 60).padStart(2, '0');
+                if (secondsElapsed <= 40) {
+                    let pipesCount = Math.floor((secondsElapsed / 40) * 100 / 5);
+                    progressBarPart.innerText = "[" + "|".repeat(pipesCount) + ".".repeat(20 - pipesCount) + "]";
+                } else {
+                    let wavePos = (secondsElapsed % 20);
+                    let waveArr = Array(20).fill('.');
+                    waveArr[wavePos] = '|';
+                    if(wavePos > 0) waveArr[wavePos-1] = '|';
+                    if(wavePos < 19) waveArr[wavePos+1] = '|';
+                    progressBarPart.innerText = "[" + waveArr.join('') + "]";
+                }
+                if (secondsElapsed === 2) wakeMessage.innerText = "> PINGING_SERVER...";
+                if (secondsElapsed === 5) wakeMessage.innerText = "> ESTABLISHING_CONNECTION...";
+                if (secondsElapsed === 15) wakeMessage.innerText = "> WAKING_COLD_INSTANCE...";
+                if (secondsElapsed === 30) wakeMessage.innerText = "> AWAITING_DATA_STREAM...";
+            }, 1000);
+        }
+
+        try {
+            const response = await fetch('https://donnie-astro-engine.onrender.com/calculate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(requestData)
+            });
+            const result = await response.json();
+
+            if (wakeInterval) clearInterval(wakeInterval);
+            if (wakeMessage) wakeMessage.innerText = "> LINK_ESTABLISHED";
+            if (progressBarPart) progressBarPart.innerText = "[" + "|".repeat(20) + "]";
+            setTimeout(() => { if (wakeContainer) wakeContainer.style.visibility = "hidden"; }, 2000);
+
+            if (result.status === "success") {
+                const data = result.data;
+                
+                // NATIVE INJECTION SEQUENCE
+                if(typeof clearAll === "function") clearAll();
+
+                // 1. Core Data
+                window.__lastSwissData = data;
+                window.__planetRetro = data.planets_retro || data.ayanamshas?.Lahiri?.planets_retro || {};
+
+                if (data.planets) {
+                    window.__rawRahuAbs     = data.planets.Rahu ?? null;
+                    window.__rawKetuAbs     = data.planets.Ketu ?? null;
+                    window.__rawRahuTrueAbs = data.planets.Rahu_true ?? null;
+                    window.__rawKetuTrueAbs = data.planets.Ketu_true ?? null;
+                }
+
+                // 2. Map Profile Name and Time to BTR Inputs
+                document.getElementById("personName").value = document.getElementById("onName").value.toUpperCase();
+                document.getElementById("btr_dd").value = String(d).padStart(2, "0");
+                document.getElementById("btr_mm").value = String(m).padStart(2, "0");
+                document.getElementById("btr_yyyy").value = String(y).padStart(4, "0");
+                document.getElementById("btr_hh").value = String(hr).padStart(2, "0");
+                document.getElementById("btr_min").value = String(min).padStart(2, "0");
+                document.getElementById("btr_sec").value = String(sec).padStart(2, "0");
+
+                window.__btrBaseTime = new Date(y, m - 1, d, hr, min, sec);
+                window.__btrCurrentTime = new Date(window.__btrBaseTime.getTime());
+                window.__btrReady = true;
+                if (typeof syncMiniBTR === "function") syncMiniBTR();
+
+                // 3. Map Degrees
+                if (typeof absToSignDeg === "function") {
+                    if(typeof data.lagna === "number"){
+                        let lag = absToSignDeg(data.lagna);
+                        document.getElementById("Lagna_sign").value = lag.sign;
+                        document.getElementById("Lagna_deg").value  = lag.deg;
+                        document.getElementById("Lagna_min").value  = lag.min;
+                        document.getElementById("Lagna_sec").value  = lag.sec;
+                    }
+
+                    if(data.planets){
+                        Object.keys(data.planets).forEach(p => {
+                            if (p === "Rahu" || p === "Ketu" || p.endsWith("_true")) return;
+                            if (document.getElementById(p+"_sign") && typeof data.planets[p] === "number") {
+                                let v = absToSignDeg(data.planets[p]);
+                                document.getElementById(p+"_sign").value = v.sign;
+                                document.getElementById(p+"_deg").value  = v.deg;
+                                document.getElementById(p+"_min").value  = v.min;
+                                document.getElementById(p+"_sec").value  = v.sec;
+                            }
+                        });
+                    }
+
+                    let useTrueNode = document.getElementById("trueNodeMode")?.checked || false;
+                    let rahuAbs = useTrueNode ? window.__rawRahuTrueAbs : window.__rawRahuAbs;
+                    let ketuAbs = useTrueNode ? window.__rawKetuTrueAbs : window.__rawKetuAbs;
+
+                    if(rahuAbs != null){
+                        let v = absToSignDeg(rahuAbs);
+                        document.getElementById("Rahu_sign").value = v.sign;
+                        document.getElementById("Rahu_deg").value  = v.deg;
+                        document.getElementById("Rahu_min").value  = v.min;
+                        document.getElementById("Rahu_sec").value  = v.sec;
+                    }
+                    if(ketuAbs != null){
+                        let v = absToSignDeg(ketuAbs);
+                        document.getElementById("Ketu_sign").value = v.sign;
+                        document.getElementById("Ketu_deg").value  = v.deg;
+                        document.getElementById("Ketu_min").value  = v.min;
+                        document.getElementById("Ketu_sec").value  = v.sec;
+                    }
+                }
+
+                // 4. Fire Redraw & BTR Loop
+                if(typeof resetUIState === "function") resetUIState();
+                if(typeof redrawAll === "function") redrawAll();
+                if(typeof redrawPLL === "function") redrawPLL();
+                if(typeof lockPlanetInputs_BTR === "function") lockPlanetInputs_BTR(true);
+
+                setTimeout(() => {
+                    window.__btrLock = false;
+                    if (typeof recomputeFromBTR === "function") recomputeFromBTR();
+                }, 50);
+
+                // Success UI State
+                btn.innerHTML = "SUCCESS ✓";
+                btn.classList.add("success");
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.classList.remove("success");
+                    btn.disabled = false;
+                }, 3000);
+
+            } else {
+                console.warn("Server Error: " + result.message);
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        } catch (error) {
+            console.error("Fetch error:", error);
+            if (wakeInterval) clearInterval(wakeInterval);
+            if (wakeMessage) wakeMessage.innerText = "> CONNECTION_FAILED";
+            setTimeout(() => { if (wakeContainer) wakeContainer.style.visibility = "hidden"; }, 3000);
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+    }
+
+    function saveCloudProfile() {
+        const name = document.getElementById("onName").value.trim();
+        if (name.length < 2) return;
+
+        const profileData = {
+            type: "CloudHoroscopeProfile",
+            name: name,
+            date: {
+                d: document.getElementById("onDay").value,
+                m: document.getElementById("onMonth").value,
+                y: document.getElementById("onYear").value
+            },
+            time: {
+                h: document.getElementById("onHour").value,
+                min: document.getElementById("onMin").value,
+                sec: document.getElementById("onSec").value
+             },
+            coords: {
+                lat: document.getElementById("onlineLat").value,
+                lon: document.getElementById("onlineLon").value
+            }
+        };
+        const dataStr = JSON.stringify(profileData, null, 2);
+        const blob = new Blob([dataStr], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const safeName = name.replace(/[^a-z0-9]/gi, '_').toUpperCase();
+        
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${safeName}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
+    function loadCloudProfile(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                if(typeof clearFetchData === "function") clearFetchData();
+                const data = JSON.parse(e.target.result);
+                if (data.type !== "CloudHoroscopeProfile") return;
+
+                document.getElementById("onName").value = data.name || "";
+                if (data.date) {
+                    document.getElementById("onDay").value = data.date.d || "";
+                    document.getElementById("onMonth").value = data.date.m || "";
+                    document.getElementById("onYear").value = data.date.y || "";
+                }
+                if (data.time) {
+                    document.getElementById("onHour").value = data.time.h || "";
+                    document.getElementById("onMin").value = data.time.min || "";
+                    document.getElementById("onSec").value = data.time.sec || "00";
+                }
+                if (data.coords) {
+                    document.getElementById("onlineLat").value = data.coords.lat || "";
+                    document.getElementById("onlineLon").value = data.coords.lon || "";
+                    document.getElementById("locationPreset").value = "manual"; 
+                    syncCoords('dec');
+                }
+
+                setTimeout(() => { if (typeof fetchFromCloud === "function") fetchFromCloud(); }, 300);
+            } catch (error) {
+                console.error("Error parsing profile JSON:", error);
+            }
+        };
+        reader.readAsText(file);
+        event.target.value = '';
+    }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 <script>
 /* =========================================================
@@ -1547,9 +2230,11 @@ function resetUIState() {
   // 1. Reset Checkboxes to Initial HTML Defaults
   const checks = {
     ignoreMin: true, ignoreSec: true, hideInputTable: true,
-    levelThemeToggle: true, originalLagnaMode: true, showCuspMode: false,
-    westAspMode: true, trueNodeMode: false, rotateCuspalMode: true,
-    rotateDynamicCuspalMode: true, modeDateHide: true, modeKN: true
+    levelThemeToggle: true, originalLagnaMode: false, showCuspMode: false,
+    westAspMode: true, trueNodeMode: true, rotateCuspalMode: true,
+    rotateDynamicCuspalMode: true, modeDateHide: true, modeKN: true,
+    removeOccupiedToggle: true, // 🔥 Forces Occupied to be ON by default upon load/reset
+    untenantedToggle: false // 🔥 Untenanted defaults to OFF
   };
   
   for (let id in checks) {
@@ -1562,6 +2247,8 @@ function resetUIState() {
 
   // 3. Reset Dropdowns
   if(document.getElementById("kundaliPivot")) document.getElementById("kundaliPivot").value = "Lagna";
+  if(document.getElementById("kundaliPivot2")) document.getElementById("kundaliPivot2").value = "Lagna";
+  if(document.getElementById("kundaliPivot3")) document.getElementById("kundaliPivot3").value = "Lagna";
   if(document.getElementById("taraMode")) document.getElementById("taraMode").value = "SSL_OF_CHANDRA";
   if(document.getElementById("pllOrderSelect")) document.getElementById("pllOrderSelect").value = "__CHANDRA_STAR__";
   if(document.getElementById("expandLevel")) document.getElementById("expandLevel").value = "2";
@@ -1595,7 +2282,7 @@ function resetUIState() {
     }
   }
   
-  if(typeof USE_TRUE_NODE !== "undefined") USE_TRUE_NODE = false;
+  if(typeof USE_TRUE_NODE !== "undefined") USE_TRUE_NODE = true;
 }
 
 function loadJSON(){
@@ -1712,17 +2399,20 @@ function applyLevelTheme(){
      SOUTH INDIAN KUNDALI CONTROLS (SEPARATED ROWS)
      ========================= -->
 
+
+
+
+
+
+
+
 <div class="pivotBar siControls">
 
-  <!-- ===== ROW 1 : DROPDOWNS + COLOR PALETTE ===== -->
   <div class="siRow siRowTop">
 
     <span>Pivot :</span>
     <select id="kundaliPivot"></select>
 
-	
-	
-	
 	<span>Lagna :</span>
 	<select id="lagnaOverride" disabled>
 	  <option value="Aries">Aries</option>
@@ -1740,19 +2430,12 @@ function applyLevelTheme(){
 	</select>
 
     <label style="cursor:pointer; display:flex; align-items:center; gap:4px; margin-left:8px; color:#facc15;">
-      <input type="checkbox" id="originalLagnaMode" checked>
+      <input type="checkbox" id="originalLagnaMode">
       Original
     </label>
 
-
-
-
-
-    <!-- 🔮 COLOR PALETTE -->
-   
   </div>
 
-  <!-- ===== ROW 2 : ALL CHECKBOXES (SINGLE ROW) ===== -->
   <div class="siRow siRowBottom">
 
     <label>
@@ -1786,7 +2469,7 @@ function applyLevelTheme(){
     </label>
 
     <label>
-      <input type="checkbox" id="trueNodeMode" >
+      <input type="checkbox" id="trueNodeMode" checked>
       True Node
     </label>
 
@@ -1799,7 +2482,8 @@ function applyLevelTheme(){
 
 
 
-</div>
+
+
 
 
 
@@ -2112,16 +2796,18 @@ html, body {
     </div>
 
     <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:20px; width:100%;">
-        <div style="flex:1; min-width:320px; max-width:600px; background:var(--panel); border:1px solid var(--border); padding:10px;">
+        <div style="flex:1; min-width:320px; background:var(--panel); border:1px solid var(--border); padding:10px;">
             <h3 style="text-align:center; color:#facc15; margin-top:0; margin-bottom:15px;">Vimshottari Dasha - Chandra</h3>
             <div id="vimChandra"></div>
         </div>
         
-        <div style="flex:1; min-width:320px; max-width:600px; background:var(--panel); border:1px solid var(--border); padding:10px;">
+        <div style="flex:1; min-width:320px; background:var(--panel); border:1px solid var(--border); padding:10px;">
             <h3 style="text-align:center; color:#facc15; margin-top:0; margin-bottom:15px;">Vimshottari Dasha - Lagna</h3>
             <div id="vimLagna"></div>
         </div>
     </div>
+	
+	
 </div>
 
 
@@ -2270,211 +2956,227 @@ function formatDateSmart(d){
   return `${y}-${mNum}-${day}`;
 }
 
+
+
+
+
+
+
+
 function buildFullDasha(containerId, baseDeg){
-  const box=document.getElementById(containerId);
-  box.innerHTML="";
-  
-  let currentDateTime = window.__btrCurrentTime || new Date();
-  let originalDateTime = window.__btrBaseTime || new Date();
+    const box = document.getElementById(containerId);
+    box.innerHTML = "";
 
-  if(!currentDateTime) return;
+    // Safely pull from the BTR Engine Memory
+    let currentDateTime = window.__btrCurrentTime || new Date();
+    let originalDateTime = window.__btrBaseTime || new Date();
 
-  const MS_YEAR=365.25*24*60*60*1000;
-  const nakSize=360/27;
+    if(!currentDateTime) return;
 
-  let nakIndex=Math.floor(baseDeg/nakSize);
-  let startLord=VIM_ORDER[nakIndex%9];
-  let frac=(baseDeg%nakSize)/nakSize;
-  let elapsedYears=VIM_YEARS[startLord]*frac;
+    // 🔥 FIX: Updated from 365.25 to highly precise Chaitra Paksha solar year to stop Vimshottari Date Drift
+    const MS_YEAR = 365.2421904 * 24 * 60 * 60 * 1000;
+    const nakSize = 360/27;
 
-  let birth=new Date(currentDateTime);
+    let nakIndex = Math.floor(baseDeg/nakSize);
+    let startLord = VIM_ORDER[nakIndex%9];
+    let frac = (baseDeg%nakSize)/nakSize;
+    let elapsedYears = VIM_YEARS[startLord]*frac;
 
-  let mahaStart=new Date(
-    birth.getTime()-elapsedYears*MS_YEAR
-  );
+    let birth = new Date(currentDateTime);
 
-  let startIndex=VIM_ORDER.indexOf(startLord);
-  let mahaCounter = 0; 
-  let order=[...VIM_ORDER.slice(startIndex),...VIM_ORDER.slice(0,startIndex)];
+    let mahaStart = new Date(
+        birth.getTime() - elapsedYears*MS_YEAR
+    );
 
-  const GRID_STYLE = "display:grid; grid-template-columns: 24px 2fr 1fr 0.7fr 0.5fr 1fr 0.7fr; align-items:center; column-gap:0.4em; width:100%; box-sizing:border-box;";
+    let startIndex = VIM_ORDER.indexOf(startLord);
+    let mahaCounter = 0; 
+    let order = [...VIM_ORDER.slice(startIndex), ...VIM_ORDER.slice(0,startIndex)];
 
-  order.forEach(mahaLord=>{
-    let mahaYears=VIM_YEARS[mahaLord];
-    let mahaEnd=new Date(mahaStart.getTime()+mahaYears*MS_YEAR);
-    
-    let ageStart = Math.floor((mahaStart - birth)/MS_YEAR);
-    let ageEnd   = Math.floor((mahaEnd - birth)/MS_YEAR);
+    const GRID_STYLE = "display:grid; grid-template-columns: 24px 2fr 1fr 0.7fr 0.5fr 1fr 0.7fr; align-items:center; column-gap:0.4em; width:100%; box-sizing:border-box;";
 
-    if(ageStart < 0) ageStart = 0;
-    if(ageEnd < 0) ageEnd = 0;
+    // --- NEW: Read Checkbox States ---
+    const hideAllAge = document.getElementById("hideAllAge")?.checked;
+    const hideBhuktiAge = document.getElementById("hideBhuktiAge")?.checked;
 
-    let mahaRow=document.createElement("div");
-    mahaRow.dataset.lord = mahaLord;
-    mahaRow.dataset.s=mahaStart;
-    mahaRow.dataset.e=mahaEnd;
-    mahaRow.dataset.l=1;
-    mahaRow.className = "vim-maha"; 
-    mahaRow.style=GRID_STYLE + "cursor:pointer; padding:6px 8px; margin:6px 0 3px 0; border:1px solid #444; border-radius:4px;";
+    order.forEach(mahaLord => {
+        let mahaYears = VIM_YEARS[mahaLord];
+        let mahaEnd = new Date(mahaStart.getTime() + mahaYears*MS_YEAR);
+        
+        let ageStart = Math.floor((mahaStart - birth)/MS_YEAR);
+        let ageEnd   = Math.floor((mahaEnd - birth)/MS_YEAR);
 
-    mahaRow.innerHTML=`
-      <div class="vimSym"></div>
-      <div style="${document.getElementById("modeKN")?.checked ? "font-weight:900;" : "font-weight:500;"}">
-        ${document.getElementById("modeKN")?.checked ? "ಮಹಾದಶೆ – " + KN_NAMES[mahaLord] : "Mahadasha – " + EN_NAMES[mahaLord]}
-        </div>
-      <div>${formatDateSmart(mahaCounter === 0 && originalDateTime ? originalDateTime : mahaStart)}</div>
-      <div>(${ageStart} y)</div>
-      <div style="text-align:center;">→</div>
-      <div>${formatDateSmart(mahaEnd)}</div>
-      <div>(${ageEnd} y)</div>
-    `;
+        if(ageStart < 0) ageStart = 0;
+        if(ageEnd < 0) ageEnd = 0;
 
-    let bhuktiBox=document.createElement("div");
-    bhuktiBox.style.display="none";
-    bhuktiBox.style.marginLeft="0"; 
-    bhuktiBox.style.marginTop="6px";
+        // Visibility logic for Maha age
+        const showMahaAge = !hideAllAge;
 
-    let startBhuktiIndex = VIM_ORDER.indexOf(mahaLord);
-    let bhuktiOrder = [
-        ...VIM_ORDER.slice(startBhuktiIndex),
-        ...VIM_ORDER.slice(0, startBhuktiIndex)
-    ];
+        let mahaRow = document.createElement("div");
+        mahaRow.dataset.lord = mahaLord;
+        mahaRow.dataset.s = mahaStart;
+        mahaRow.dataset.e = mahaEnd;
+        mahaRow.dataset.l = 1;
+        mahaRow.className = "vim-maha"; 
+        mahaRow.style = GRID_STYLE + "cursor:pointer; padding:6px 8px; margin:6px 0 3px 0; border:1px solid #444; border-radius:4px;";
 
-    let bhuktiStart=new Date(mahaStart);
-
-
-
-
-bhuktiOrder.forEach(bhuktiLord=>{
-      let bhuktiYears=mahaYears*(VIM_YEARS[bhuktiLord]/120);
-      let bhuktiEnd=new Date(bhuktiStart.getTime()+bhuktiYears*MS_YEAR);
-
-      // --- NEW AGE CALCULATION FOR BHUKTI ---
-      let ageBhuktiStart = Math.floor((bhuktiStart - birth)/MS_YEAR);
-      let ageBhuktiEnd   = Math.floor((bhuktiEnd - birth)/MS_YEAR);
-
-      if(ageBhuktiStart < 0) ageBhuktiStart = 0;
-      if(ageBhuktiEnd < 0) ageBhuktiEnd = 0;
-      // --------------------------------------
-
-      let bhuktiRow=document.createElement("div");
-      bhuktiRow.dataset.s=bhuktiStart;
-      bhuktiRow.dataset.e=bhuktiEnd;
-      bhuktiRow.dataset.l=2;
-      bhuktiRow.className = "vim-bhukti"; 
-      bhuktiRow.style=GRID_STYLE + "cursor:pointer; padding:4px 6px; margin:2px 0; border:1px solid #333; border-radius:3px;";
-
-      // --- INJECT AGE INTO THE EMPTY DIVS ---
-      bhuktiRow.innerHTML=`
-        <div class="vimSym"></div>
-        <div style="${document.getElementById("modeKN")?.checked ? "font-weight:900;" : "font-weight:500;"}">
-        ${document.getElementById("modeKN")?.checked ? "ಭುಕ್ತಿ – " + KN_NAMES[bhuktiLord] : "Bhukti – " + EN_NAMES[bhuktiLord]}
-        </div>
-        <div>${formatDateSmart(bhuktiStart)}</div>
-        <div>(${ageBhuktiStart} y)</div>
-        <div style="text-align:center;">→</div>
-        <div>${formatDateSmart(bhuktiEnd)}</div>
-        <div>(${ageBhuktiEnd} y)</div>
-      `;
-
-      let antaraBox=document.createElement("div");
-	  
-	  
-      antaraBox.style.display="none";
-      antaraBox.style.marginLeft="0"; 
-
-      let startAntaraIndex = VIM_ORDER.indexOf(bhuktiLord);
-      let antaraOrder = [
-          ...VIM_ORDER.slice(startAntaraIndex),
-          ...VIM_ORDER.slice(0, startAntaraIndex)
-      ];
-
-      let antaraStart=new Date(bhuktiStart);
-
-      antaraOrder.forEach(antaraLord=>{
-        let antaraYears=bhuktiYears*(VIM_YEARS[antaraLord]/120);
-        let antaraEnd=new Date(antaraStart.getTime()+antaraYears*MS_YEAR);
-
-        let line=document.createElement("div");
-        line.dataset.s=antaraStart;
-        line.dataset.e=antaraEnd;
-        line.dataset.l=3;
-        line.className = "vim-antara"; 
-        line.style=GRID_STYLE + "cursor:pointer; padding:3px 6px; margin:1px 0; border:1px solid #1e3a8a; border-radius:2px;";
-
-        line.innerHTML=`
+        mahaRow.innerHTML = `
           <div class="vimSym"></div>
           <div style="${document.getElementById("modeKN")?.checked ? "font-weight:900;" : "font-weight:500;"}">
-        ${document.getElementById("modeKN")?.checked ? "ಅಂತರ – " + KN_NAMES[antaraLord] : "Antara – " + EN_NAMES[antaraLord]}
-        </div>
-          <div>${formatDateSmart(antaraStart)}</div>
-          <div></div>
+            ${document.getElementById("modeKN")?.checked ? "ಮಹಾದಶೆ – " + KN_NAMES[mahaLord] : "Mahadasha – " + EN_NAMES[mahaLord]}
+            </div>
+          <div>${formatDateSmart(mahaCounter === 0 && originalDateTime ? originalDateTime : mahaStart)}</div>
+          <div>${showMahaAge ? `(${ageStart} y)` : ''}</div>
           <div style="text-align:center;">→</div>
-          <div>${formatDateSmart(antaraEnd)}</div>
-          <div></div>
+          <div>${formatDateSmart(mahaEnd)}</div>
+          <div>${showMahaAge ? `(${ageEnd} y)` : ''}</div>
         `;
 
-        antaraBox.appendChild(line);
-        antaraStart=antaraEnd;
-      });
+        let bhuktiBox = document.createElement("div");
+        bhuktiBox.style.display = "none";
+        bhuktiBox.style.marginLeft = "0"; 
+        bhuktiBox.style.marginTop = "6px";
 
-     bhuktiRow.onclick=(e)=>{
-      e.stopPropagation();
+        let startBhuktiIndex = VIM_ORDER.indexOf(mahaLord);
+        let bhuktiOrder = [
+            ...VIM_ORDER.slice(startBhuktiIndex),
+            ...VIM_ORDER.slice(0, startBhuktiIndex)
+        ];
 
-      const levelLimit = parseInt(document.getElementById("expandLevel")?.value || "2");
+        let bhuktiStart = new Date(mahaStart);
 
-      box.querySelectorAll(".vim-bhukti").forEach(r=>r.classList.remove("active"));
-      bhuktiRow.classList.add("active");
+        bhuktiOrder.forEach(bhuktiLord => {
+          let bhuktiYears = mahaYears*(VIM_YEARS[bhuktiLord]/120);
+          let bhuktiEnd = new Date(bhuktiStart.getTime() + bhuktiYears*MS_YEAR);
 
-      if(levelLimit === 2){
-        if(currentOpenBhuktiBox[containerId]){
-          currentOpenBhuktiBox[containerId].style.display="none";
-        }
-        currentOpenBhuktiBox[containerId] = null;
-        return;
-      }
+          // --- NEW: Calculate Bhukti Age ---
+          let bAgeStart = Math.floor((bhuktiStart - birth)/MS_YEAR);
+          let bAgeEnd   = Math.floor((bhuktiEnd - birth)/MS_YEAR);
+          if(bAgeStart < 0) bAgeStart = 0;
+          if(bAgeEnd < 0) bAgeEnd = 0;
 
-      const isOpen = antaraBox.style.display === "block";
+          // Visibility logic for Bhukti age
+          const showBhuktiAge = !hideAllAge && !hideBhuktiAge;
 
-      if(currentOpenBhuktiBox[containerId] && currentOpenBhuktiBox[containerId]!==antaraBox){
-        currentOpenBhuktiBox[containerId].style.display="none";
-      }
+          let bhuktiRow = document.createElement("div");
+          bhuktiRow.dataset.s = bhuktiStart;
+          bhuktiRow.dataset.e = bhuktiEnd;
+          bhuktiRow.dataset.l = 2;
+          bhuktiRow.className = "vim-bhukti"; 
+          bhuktiRow.style = GRID_STYLE + "cursor:pointer; padding:4px 6px; margin:2px 0; border:1px solid #333; border-radius:3px;";
 
-      antaraBox.style.display = isOpen ? "none" : "block";
+          bhuktiRow.innerHTML = `
+            <div class="vimSym"></div>
+            <div style="${document.getElementById("modeKN")?.checked ? "font-weight:900;" : "font-weight:500;"}">
+            ${document.getElementById("modeKN")?.checked ? "ಭುಕ್ತಿ – " + KN_NAMES[bhuktiLord] : "Bhukti – " + EN_NAMES[bhuktiLord]}
+            </div>
+            <div>${formatDateSmart(bhuktiStart)}</div>
+            <div>${showBhuktiAge ? `(${bAgeStart} y)` : ''}</div>
+            <div style="text-align:center;">→</div>
+            <div>${formatDateSmart(bhuktiEnd)}</div>
+            <div>${showBhuktiAge ? `(${bAgeEnd} y)` : ''}</div>
+          `;
 
-      currentOpenBhuktiBox[containerId] =
-        antaraBox.style.display==="block" ? antaraBox : null;
-    };
-      
-      bhuktiBox.appendChild(bhuktiRow);
-      bhuktiBox.appendChild(antaraBox);
-      bhuktiStart=bhuktiEnd;
+          let antaraBox = document.createElement("div");
+          antaraBox.style.display = "none";
+          antaraBox.style.marginLeft = "0"; 
+
+          let startAntaraIndex = VIM_ORDER.indexOf(bhuktiLord);
+            let antaraOrder = [
+                ...VIM_ORDER.slice(startAntaraIndex),
+                ...VIM_ORDER.slice(0, startAntaraIndex)
+            ];
+
+          let antaraStart = new Date(bhuktiStart);
+
+          antaraOrder.forEach(antaraLord => {
+            let antaraYears = bhuktiYears*(VIM_YEARS[antaraLord]/120);
+            let antaraEnd = new Date(antaraStart.getTime() + antaraYears*MS_YEAR);
+
+            let line = document.createElement("div");
+            line.dataset.s = antaraStart;
+            line.dataset.e = antaraEnd;
+            line.dataset.l = 3;
+            line.className = "vim-antara"; 
+            line.style = GRID_STYLE + "cursor:pointer; padding:3px 6px; margin:1px 0; border:1px solid #1e3a8a; border-radius:2px;";
+
+            line.innerHTML = `
+              <div class="vimSym"></div>
+              <div style="${document.getElementById("modeKN")?.checked ? "font-weight:900;" : "font-weight:500;"}">
+            ${document.getElementById("modeKN")?.checked ? "ಅಂತರ – " + KN_NAMES[antaraLord] : "Antara – " + EN_NAMES[antaraLord]}
+            </div>
+              <div>${formatDateSmart(antaraStart)}</div>
+              <div></div>
+              <div style="text-align:center;">→</div>
+              <div>${formatDateSmart(antaraEnd)}</div>
+              <div></div>
+            `;
+
+            antaraBox.appendChild(line);
+            antaraStart = antaraEnd;
+          });
+
+         bhuktiRow.onclick = (e) => {
+          e.stopPropagation();
+
+          const levelLimit = parseInt(document.getElementById("expandLevel")?.value || "2");
+
+          box.querySelectorAll(".vim-bhukti").forEach(r => r.classList.remove("active"));
+          bhuktiRow.classList.add("active");
+
+          if(levelLimit === 2){
+            if(currentOpenBhuktiBox[containerId]){
+              currentOpenBhuktiBox[containerId].style.display = "none";
+            }
+            currentOpenBhuktiBox[containerId] = null;
+            return;
+          }
+
+          const isOpen = antaraBox.style.display === "block";
+
+          if(currentOpenBhuktiBox[containerId] && currentOpenBhuktiBox[containerId] !== antaraBox){
+            currentOpenBhuktiBox[containerId].style.display = "none";
+          }
+
+          antaraBox.style.display = isOpen ? "none" : "block";
+          currentOpenBhuktiBox[containerId] = antaraBox.style.display === "block" ? antaraBox : null;
+        };
+
+          bhuktiBox.appendChild(bhuktiRow);
+          bhuktiBox.appendChild(antaraBox);
+          bhuktiStart = bhuktiEnd;
+        });
+
+        mahaRow.onclick = () => {
+          const isOpen = bhuktiBox.style.display === "block";
+
+          box.querySelectorAll(".vim-maha").forEach(r => r.classList.remove("active"));
+
+          if(currentOpenMahaBox[containerId] && currentOpenMahaBox[containerId] !== bhuktiBox){
+            currentOpenMahaBox[containerId].style.display = "none";
+          }
+
+          bhuktiBox.style.display = isOpen ? "none" : "block";
+
+          if(!isOpen){
+            mahaRow.classList.add("active");
+          }
+
+          currentOpenMahaBox[containerId] = bhuktiBox.style.display === "block" ? bhuktiBox : null;
+        };
+
+        box.appendChild(mahaRow);
+        box.appendChild(bhuktiBox);
+        mahaStart = mahaEnd;
+        mahaCounter++;
     });
-
-    mahaRow.onclick=()=>{
-      const isOpen=bhuktiBox.style.display==="block";
-
-      box.querySelectorAll(".vim-maha").forEach(r=>r.classList.remove("active"));
-
-      if(currentOpenMahaBox[containerId] && currentOpenMahaBox[containerId]!==bhuktiBox){
-        currentOpenMahaBox[containerId].style.display="none";
-      }
-
-      bhuktiBox.style.display=isOpen?"none":"block";
-
-      if(!isOpen){
-        mahaRow.classList.add("active");
-      }
-
-      currentOpenMahaBox[containerId] = bhuktiBox.style.display==="block" ? bhuktiBox : null;
-    };
-
-    box.appendChild(mahaRow);
-    box.appendChild(bhuktiBox);
-    mahaStart=mahaEnd;
-    mahaCounter++;
-  });
 }
+
+
+
+
+
+
+
 
 const VIM_ORDER = ["Ke","Ve","Sy","Ch","Ma","Ra","Ju","Sa","Bu"];
 
@@ -2711,15 +3413,31 @@ function expandVimForDate(containerId, targetDate){
 
 
 function renderBothDashas() {
-    if(typeof getAbsDeg !== "function") return;
-    
-    let chandraDeg = getAbsDeg("Chandra");
-    let lagnaDeg = getAbsDeg("Lagna");
+    // 1. Force the BTR absolute value (ignore KP/Vedic display offsets)
+    function getRawBtrDeg(entity) {
+        if (window.__btrAbs && typeof window.__btrAbs[entity] === "number") {
+            return ((window.__btrAbs[entity] % 360) + 360) % 360;
+        }
+        
+        const data = window.__lastSwissData;
+        if (!data) return null;
+        
+        if (entity === "Lagna" && typeof data.lagna === "number") {
+            return ((data.lagna % 360) + 360) % 360;
+        }
+        
+        if (data.planets && typeof data.planets[entity] === "number") {
+            return ((data.planets[entity] % 360) + 360) % 360;
+        }
+        
+        return null;
+    }
+
+    let chandraDeg = getRawBtrDeg("Chandra");
+    let lagnaDeg = getRawBtrDeg("Lagna");
     
     if(chandraDeg !== null) buildFullDasha("vimChandra", chandraDeg);
     if(lagnaDeg !== null) buildFullDasha("vimLagna", lagnaDeg);
-    
-    // Auto-expand logic has been completely removed from here
     
     highlightTodayVim();
     highlightRunningMahaInTable();
@@ -2809,45 +3527,71 @@ const SI_SIGNS = [
 
 
 
-
 /* =========================================================
    BUILD PIVOT DROPDOWN (PLANETS + CSL)
    ========================================================= */
 (function(){
-  let sel = document.getElementById("kundaliPivot");
-  sel.innerHTML = "";
-
-  /* ---------- PLANETS + LAGNA (FIRST ROUND) ---------- */
   const PLANET_LIST = [
     "Lagna","Surya","Chandra","Mangala","Rahu",
     "Jupiter","Saturn","Budha","Ketu","Venus"
   ];
 
-  PLANET_LIST.forEach(p=>{
-    let o = document.createElement("option");
-    o.value = p;
-    o.text  = p;
-    sel.appendChild(o);
-  });
-
-  /* ---------- PLANETS REPEATED AGAIN (SECOND ROUND) ---------- */
-  PLANET_LIST.slice(1).forEach(p=>{   // skip Lagna in repeat
-    let o = document.createElement("option");
-    o.value = p + "_2";              // internal unique key
-    o.text  = p;                     // visually same label
-    sel.appendChild(o);
-  });
-
-  /* ---------- CSL PIVOTS ---------- */
-  for(let i = 1; i <= 12; i++){
-    let o = document.createElement("option");
-    o.value = i + "CSL";
-    o.text  = i + " CSL";
-    sel.appendChild(o);
+  function populateDropdown(sel) {
+    if(!sel) return;
+    sel.innerHTML = "";
+    PLANET_LIST.forEach(p => {
+      let o = document.createElement("option"); o.value = p; o.text = p; sel.appendChild(o);
+    });
+    PLANET_LIST.slice(1).forEach(p => {
+      let o = document.createElement("option"); o.value = p + "_2"; o.text = p; sel.appendChild(o);
+    });
+    for(let i = 1; i <= 12; i++){
+      let o = document.createElement("option"); o.value = i + "CSL"; o.text = i + " CSL"; sel.appendChild(o);
+    }
+    sel.value = "Lagna";
   }
 
-  sel.value = "Lagna";
+  // 1. Immediately populate the Main dropdown so the Kundali doesn't crash on load
+  let sel1 = document.getElementById("kundaliPivot");
+  if(sel1) populateDropdown(sel1);
+
+  // 2. Wait for HTML to load, THEN populate secondary dropdowns & link all 3!
+  window.addEventListener("DOMContentLoaded", () => {
+    let sel2 = document.getElementById("kundaliPivot2");
+    let sel3 = document.getElementById("kundaliPivot3");
+    
+    if(sel2) populateDropdown(sel2);
+    if(sel3) populateDropdown(sel3);
+
+    let allSelects = [sel1, sel2, sel3].filter(Boolean);
+
+    allSelects.forEach(sourceSel => {
+      sourceSel.addEventListener("change", (e) => {
+        let newVal = e.target.value;
+        let needsUpdate = false;
+        
+        allSelects.forEach(targetSel => {
+          if (targetSel !== sourceSel && targetSel.value !== newVal) {
+            targetSel.value = newVal;
+            needsUpdate = true;
+          }
+        });
+
+        // Trigger main engine update only if a secondary dropdown was touched
+        if (sourceSel !== sel1 && sel1 && needsUpdate) {
+           sel1.dispatchEvent(new Event("change"));
+        }
+      });
+    });
+  });
 })();
+
+
+
+
+
+
+
 
 
 
@@ -3532,13 +4276,20 @@ drawSIKundali();
 <!-- =========================
      TARA + ORDER CONTROL ROW
      ========================= -->
+	 
+	 
+	 
+ 
 <div class="pivotBar" style="
   margin-top:20px;
   margin-bottom:10px;
   justify-content:center;
 ">
 
-  <span>Tara :</span>
+  <span>Pivot :</span>
+  <select id="kundaliPivot2" style="font-weight: 800; background: #021b16; color: #ecfdf5; border: 1px solid #10b981; border-radius: 6px; padding: 4px; outline: none;"></select>
+
+  <span style="margin-left:18px">Tara :</span>
   <select id="taraMode">
     <option value="SSL_OF_CHANDRA" selected>SSL OF Chandra</option>
     <option value="SL_OF_CHANDRA">SL OF Chandra</option>
@@ -3556,25 +4307,17 @@ drawSIKundali();
     <option value="Venus">Venus</option>
   </select>
 
-  <span style="margin-left:18px">Order :</span>
   
-  <select id="pllOrderSelect">
-  <option value="">Auto (Follow Pivot)</option>
-  <option value="__LAGNA_STAR__">Lagna’s Star Lord</option>
-  <option value="__CHANDRA_STAR__" selected>Chandra’s Star Lord</option>
-  <option value="Surya">Surya</option>
 
-	
-	
-    <option value="Chandra">Chandra</option>
-    <option value="Mangala">Mangala</option>
-    <option value="Rahu">Rahu</option>
-    <option value="Jupiter">Jupiter</option>
-    <option value="Saturn">Saturn</option>
-    <option value="Budha">Budha</option>
-    <option value="Ketu">Ketu</option>
-    <option value="Venus">Venus</option>
-  </select>
+  <label style="cursor:pointer; display:flex; align-items:center; gap:4px; margin-left:24px; color:#facc15; font-size:14px; font-weight: 800;">
+    <input type="checkbox" id="removeOccupiedToggle" checked onchange="redrawAll()">
+    Remove Occupied
+  </label>
+
+  <label style="cursor:pointer; display:flex; align-items:center; gap:4px; margin-left:12px; color:#facc15; font-size:14px; font-weight: 800;">
+    <input type="checkbox" id="untenantedToggle" onchange="redrawAll()">
+    Untenanted
+  </label>
 
   <div id="colorPalette" style="margin-left: 24px;">
     <div class="colorBox purple active" data-color="purple" title="Royal Purple"></div>
@@ -4420,6 +5163,74 @@ function getHouseLordships(planet){
 
 
 
+/* =========================================================
+   GLOBAL FILTER: REMOVE OCCUPIED LORDSHIPS (NEW ENGINE)
+   ========================================================= */
+function getFilteredLordships(planet) {
+    const toggle = document.getElementById("removeOccupiedToggle");
+    
+    // 1. If toggle is off, return standard unfiltered lordships
+    if (!toggle || !toggle.checked) {
+        return (planet === "Rahu" || planet === "Ketu")
+            ? getRahuKetuHouseLordships(planet)
+            : getHouseLordships(planet);
+    }
+
+    const BASE_PLANETS = ["Surya","Chandra","Mangala","Rahu","Jupiter","Saturn","Budha","Ketu","Venus"];
+    let occupiedByOthers = new Set();
+    
+    if (planet === "Rahu" || planet === "Ketu") {
+        // --- RAHU & KETU LOGIC ---
+        let nodeSign = signs[Math.floor(getAbsDeg(planet) / 30) + 1];
+        if(!nodeSign) return "";
+        let dispositor = SIGN_LORDS[nodeSign];
+        if(!dispositor) return "";
+
+        // A) Protect Placements (Node's house + Dispositor's house)
+        let placements = [];
+        let nodeHouse = getHouseFromPivot(planet);
+        let dispHouse = getHouseFromPivot(dispositor);
+        if(nodeHouse) placements.push(nodeHouse);
+        if(dispHouse) placements.push(dispHouse);
+
+        // B) Lordship Houses (Subject to filtering)
+        let ruled = getHouseLordships(dispositor).split(",").filter(Boolean).map(Number);
+
+        // C) Find Occupied Houses (Skip the Node itself)
+        BASE_PLANETS.forEach(p => {
+            if (p === planet) return; 
+            let h = getHouseFromPivot(p);
+            if(h) occupiedByOthers.add(Number(h));
+        });
+
+        // D) Filter ONLY the ruled houses
+        let filteredRuled = ruled.filter(h => !occupiedByOthers.has(h));
+
+        // E) Combine Protected Placements + Filtered Ruled Houses
+        let finalHouses = [...new Set([...placements, ...filteredRuled])].sort((a,b)=>a-b);
+        return finalHouses.join(",");
+        
+    } else {
+        // --- NORMAL PLANETS LOGIC ---
+        let lordsStr = getHouseLordships(planet);
+        if (!lordsStr) return "";
+
+        BASE_PLANETS.forEach(p => {
+            if (p === planet) return; 
+            let h = getHouseFromPivot(p);
+            if(h) occupiedByOthers.add(Number(h));
+        });
+
+        let lordsArr = lordsStr.split(",").map(Number).filter(n => !isNaN(n) && n !== 0);
+        let filteredArr = lordsArr.filter(h => !occupiedByOthers.has(h));
+        
+        return filteredArr.join(",");
+    }
+}
+
+
+
+
 
 
 
@@ -4459,6 +5270,20 @@ function getRahuKetuHouseLordships(node){
 
   return houses.join(",");
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -4612,13 +5437,10 @@ if(window.__selectedCounterRows[p]){
 
 
 
-		/* LORDSHIP (HOUSE NUMBERS) */
-		let lordships;
-		if(p === "Rahu" || p === "Ketu"){
-		  lordships = getRahuKetuHouseLordships(p);
-		}else{
-		  lordships = getHouseLordships(p);
-		}
+		/* LORDSHIP (HOUSE NUMBERS) - KEEP RAW FOR TABLE 1 COLUMN */
+		let lordships = (p === "Rahu" || p === "Ketu")
+		  ? getRahuKetuHouseLordships(p)
+		  : getHouseLordships(p);
 
 		/* DEGREE DIFFERENCE + ASPECT */
 		let diff = getDegreeDifference(p);
@@ -4661,9 +5483,10 @@ if(window.__selectedCounterRows[p]){
 		// Lordship
 		r.insertCell().textContent = lordships;
 
-		// Summation (Forward + Lordship)
+		// Summation (Forward + Lordship) - APPLY FILTER HERE
+		let filteredLordsForSum = getFilteredLordships(p);
 		r.insertCell().textContent =
-		  getCounterSummation(fwd, lordships);
+		  getCounterSummation(fwd, filteredLordsForSum);
 
 		// Tara (ONLY this planet, based on selected Tara mode)
 		r.insertCell().textContent =
@@ -4725,8 +5548,7 @@ document.getElementById("kundaliPivot")
 
 
 
-document.getElementById("pllOrderSelect").value = "";
-window.__pllOrderOverride = null;
+
 
 
 
@@ -5320,7 +6142,35 @@ document.querySelectorAll("#colorPalette .colorBox").forEach(box=>{
 
 <hr>
 
+<div class="pivotBar" style="margin-top:20px; margin-bottom:10px; justify-content:center;">
+  <span>Pivot :</span>
+  <select id="kundaliPivot3" style="font-weight: 800; background: #021b16; color: #ecfdf5; border: 1px solid #10b981; border-radius: 6px; padding: 4px; outline: none;"></select>
+
+  <span style="margin-left:24px">Sort By :</span>
+  <select id="pllSortSelect" style="font-weight: 800; background: #021b16; color: #ecfdf5; border: 1px solid #10b981; border-radius: 6px; padding: 4px; outline: none;">
+    <option value="__CHANDRA_STAR__" selected>Moon's Star Lord</option>
+    <option value="__LAGNA_STAR__">Lagna's Star Lord</option>
+    <option value="Surya">Surya</option>
+    <option value="Chandra">Chandra</option>
+    <option value="Mangala">Mangala</option>
+    <option value="Rahu">Rahu</option>
+    <option value="Jupiter">Jupiter</option>
+    <option value="Saturn">Saturn</option>
+    <option value="Budha">Budha</option>
+    <option value="Ketu">Ketu</option>
+    <option value="Venus">Venus</option>
+  </select>
+</div>
+
 <h2 id="table2" style="text-align:center">
+
+
+
+
+
+
+
+
 TABLE 2 - PLANETARY LEVEL BY LEVEL ANALYZER
 </h2>
 
@@ -5542,11 +6392,8 @@ function getConjunctPlanets(entity){
       /* placed house */
       set.add(getHouseFromPivot(p));
 
-      /* lordships */
-      let lords =
-        (p==="Rahu"||p==="Ketu")
-        ? getRahuKetuHouseLordships(p)
-        : getHouseLordships(p);
+      /* lordships - FILTERED */
+      let lords = getFilteredLordships(p);
 
       lords.split(",").forEach(x=>{
         if(x) set.add(+x);
@@ -5718,11 +6565,8 @@ function getAspectedBy(entity){
         /* placed house */
         set.add(pHouse);
 
-        /* lordships */
-        let lords =
-          (p==="Rahu"||p==="Ketu")
-          ? getRahuKetuHouseLordships(p)
-          : getHouseLordships(p);
+        /* lordships - FILTERED */
+        let lords = getFilteredLordships(p);
 
         lords.split(",").forEach(x=>{
           if(x) set.add(+x);
@@ -5755,11 +6599,8 @@ function getSummation(planet){
   /* placed house */
   set.add(getHouseFromPivot(planet));
 
-  /* lordships */
-  let lords =
-    (planet==="Rahu"||planet==="Ketu")
-    ? getRahuKetuHouseLordships(planet)
-    : getHouseLordships(planet);
+  /* lordships - FILTERED */
+  let lords = getFilteredLordships(planet);
 
   lords.split(",").forEach(x=>{
     if(x) set.add(+x);
@@ -6302,59 +7143,58 @@ function resolveEntity(entity, level){
 
 
 /* =========================================
-   PLL ORDER OVERRIDE (DISPLAY ONLY)
+   PLL ORDER LOGIC (SYNC WITH PIVOT LIKE TABLE 7)
    ========================================= */
-window.__pllOrderOverride = null;
+window._lastPllPivot = null;
 
 function getPLLPlanetOrder(pivot){
-
   const BASE = [
     "Surya","Chandra","Mangala","Rahu",
     "Jupiter","Saturn","Budha","Ketu","Venus"
   ];
 
-  /* ===== SPECIAL MODE : LAGNA STAR LORD ===== */
-  if(
-    window.__pllOrderOverride === "__LAGNA_STAR__" &&
-    pivot === "Lagna"
-  ){
+  let sortSel = document.getElementById("pllSortSelect");
+  let currentPivot = pivot.replace("_2","");
+  
+  // Sync Sort Dropdown when Pivot changes (ignores CSLs)
+  if (window._lastPllPivot !== currentPivot) {
+      if (sortSel && BASE.includes(currentPivot)) {
+          sortSel.value = currentPivot;
+      }
+      window._lastPllPivot = currentPivot;
+  }
+
+  let sortMode = sortSel ? sortSel.value : "__CHANDRA_STAR__";
+  let order = [...BASE];
+
+  if(sortMode === "__LAGNA_STAR__") {
     const star = getStarLord("Lagna");
     if(BASE.includes(star)){
       let i = BASE.indexOf(star);
-      return [...BASE.slice(i), ...BASE.slice(0,i)];
+      order = [...BASE.slice(i), ...BASE.slice(0,i)];
     }
-  }
-
-  /* ===== SPECIAL MODE : CHANDRA STAR LORD ===== */
-  if(
-    window.__pllOrderOverride === "__CHANDRA_STAR__" &&
-    pivot === "Lagna"
-  ){
+  } 
+  else if(sortMode === "__CHANDRA_STAR__") {
     const star = getStarLord("Chandra");
     if(BASE.includes(star)){
       let i = BASE.indexOf(star);
-      return [...BASE.slice(i), ...BASE.slice(0,i)];
+      order = [...BASE.slice(i), ...BASE.slice(0,i)];
     }
+  } 
+  else if(BASE.includes(sortMode)){
+    let i = BASE.indexOf(sortMode);
+    order = [...BASE.slice(i), ...BASE.slice(0,i)];
   }
 
-  /* ===== MANUAL PLANET OVERRIDE ===== */
-  if(window.__pllOrderOverride && BASE.includes(window.__pllOrderOverride)){
-    let i = BASE.indexOf(window.__pllOrderOverride);
-    return [...BASE.slice(i), ...BASE.slice(0,i)];
-  }
-
-  /* ===== DEFAULT (PIVOT ROTATION) ===== */
-  if(pivot === "Lagna"){
-    return BASE;
-  }
-
-  if(BASE.includes(pivot)){
-    let i = BASE.indexOf(pivot);
-    return [...BASE.slice(i), ...BASE.slice(0,i)];
-  }
-
-  return BASE;
+  return order;
 }
+
+
+
+
+
+
+
 
 
 
@@ -6524,22 +7364,26 @@ const PLL_PLANETS = getPLLPlanetOrder(pivot);
 
 	r.insertCell().textContent = planetLabel;
 
+    /* 🔥 UNTENANTED FILTER LOGIC */
+    let isUntenantedMode = document.getElementById("untenantedToggle")?.checked;
+    let isTargetLevel = (level === "Planet" || level === "Sub Lord" || level === "Sub-Sub");
+    let hasDollar = isTenantedPlanet(actual);
+    let hideNumbers = isUntenantedMode && isTargetLevel && !hasDollar;
+
 	// TARA
-	r.insertCell().textContent = getTaraLabel(actual, p);
+	r.insertCell().textContent = hideNumbers ? "" : getTaraLabel(actual, p);
 
-      r.insertCell().textContent = getHouseFromPivot(actual);
+      r.insertCell().textContent = hideNumbers ? "" : getHouseFromPivot(actual);
 
-      let lords =
-        (actual==="Rahu"||actual==="Ketu")
-        ? getRahuKetuHouseLordships(actual)
-        : getHouseLordships(actual);
+      /* 🔥 APPLY REMOVE OCCUPIED FILTER FOR PLL TABLE */
+      let lords = getFilteredLordships(actual);
 
-      r.insertCell().textContent = lords;
-	r.insertCell().textContent = getSummation(actual);
-	r.insertCell().textContent = getConjunctPlanets(actual);
-	r.insertCell().textContent = getAspectedBy(actual);
-	r.insertCell().textContent = getAspectingHouses(actual);
-	r.insertCell().textContent = getAspectingPlanets(actual);
+      r.insertCell().textContent = hideNumbers ? "" : lords;
+	r.insertCell().textContent = hideNumbers ? "" : getSummation(actual);
+	r.insertCell().textContent = hideNumbers ? "" : getConjunctPlanets(actual);
+	r.insertCell().textContent = hideNumbers ? "" : getAspectedBy(actual);
+	r.insertCell().textContent = hideNumbers ? "" : getAspectingHouses(actual);
+	r.insertCell().textContent = hideNumbers ? "" : getAspectingPlanets(actual);
 
 
 
@@ -6616,13 +7460,8 @@ setTimeout(redrawPLL, 0);
 
 
 
-document.getElementById("pllOrderSelect")
+document.getElementById("pllSortSelect")
   ?.addEventListener("change", e => {
-
-    // store manual override
-    window.__pllOrderOverride =
-      e.target.value || null;
-
     // 🔥 MAKE TABLE 1 DYNAMIC
     buildCounterTable();
 
@@ -7346,9 +8185,8 @@ function getCuspalSubLord(bhava){
 function CPR_getHouse(p){ return getHouseFromPivot(p); }
 
 function CPR_getLords(p){
-  return (p==="Rahu"||p==="Ketu")
-    ? getRahuKetuHouseLordships(p)
-    : getHouseLordships(p);
+  /* 🔥 APPLY REMOVE OCCUPIED FILTER FOR CUSPAL TABLES */
+  return getFilteredLordships(p);
 }
 
 function CPR_getSummation(p){
@@ -7560,6 +8398,12 @@ function buildCuspalPromiseTable(bhava, planet){
 
     r.insertCell().textContent = label;
 
+    /* 🔥 UNTENANTED FILTER LOGIC */
+    let isUntenantedMode = document.getElementById("untenantedToggle")?.checked;
+    let isTargetLevel = (level === "Planet" || level === "Sub Lord" || level === "Sub-Sub");
+    let hasDollar = isTenantedPlanet(actual);
+    let hideNumbers = isUntenantedMode && isTargetLevel && !hasDollar;
+
     /* ---------- ROTATED OUTPUT (CUSPAL MODE SAFE) ---------- */
 
 			let house = rotateHouseForCusp(CPR_getHouse(actual), bhava);
@@ -7571,15 +8415,15 @@ function buildCuspalPromiseTable(bhava, planet){
 			let aspH  = rotateNumberList(CPR_getAspectingHouses(actual), bhava);
 
 			// TARA
-			r.insertCell().textContent = getTaraLabel(actual, planet);
+			r.insertCell().textContent = hideNumbers ? "" : getTaraLabel(actual, planet);
 
-			r.insertCell().textContent = house;
-			r.insertCell().textContent = lords;
-			r.insertCell().textContent = sum;
-			r.insertCell().textContent = conj;
-			r.insertCell().textContent = CPR_getAspectedBy(actual);
-			r.insertCell().textContent = aspH;
-			r.insertCell().textContent = asp;
+			r.insertCell().textContent = hideNumbers ? "" : house;
+			r.insertCell().textContent = hideNumbers ? "" : lords;
+			r.insertCell().textContent = hideNumbers ? "" : sum;
+			r.insertCell().textContent = hideNumbers ? "" : conj;
+			r.insertCell().textContent = hideNumbers ? "" : CPR_getAspectedBy(actual);
+			r.insertCell().textContent = hideNumbers ? "" : aspH;
+			r.insertCell().textContent = hideNumbers ? "" : asp;
 
 
   });
@@ -7789,12 +8633,11 @@ function buildDynamicCuspalPromiseTable(bhava, planet){
 
 	r.insertCell().textContent = label;
 
-
-
-
-
-
-
+    /* 🔥 UNTENANTED FILTER LOGIC */
+    let isUntenantedMode = document.getElementById("untenantedToggle")?.checked;
+    let isTargetLevel = (level === "Planet" || level === "Sub Lord" || level === "Sub-Sub");
+    let hasDollar = isTenantedPlanet(actual);
+    let hideNumbers = isUntenantedMode && isTargetLevel && !hasDollar;
 
     /* 🔁 INTERNAL ROTATION (AUTO, NO CHECKBOX) */
   let house = bhava === 1
@@ -7847,18 +8690,14 @@ let aspH = bhava === 1
       1
     );
 
-
-
-
-
-    r.insertCell().textContent = getTaraLabel(actual, planet);
-    r.insertCell().textContent = house;
-    r.insertCell().textContent = lords;
-    r.insertCell().textContent = sum;
-    r.insertCell().textContent = conj;
-    r.insertCell().textContent = CPR_getAspectedBy(actual);
-    r.insertCell().textContent = aspH;
-    r.insertCell().textContent = asp;
+    r.insertCell().textContent = hideNumbers ? "" : getTaraLabel(actual, planet);
+    r.insertCell().textContent = hideNumbers ? "" : house;
+    r.insertCell().textContent = hideNumbers ? "" : lords;
+    r.insertCell().textContent = hideNumbers ? "" : sum;
+    r.insertCell().textContent = hideNumbers ? "" : conj;
+    r.insertCell().textContent = hideNumbers ? "" : CPR_getAspectedBy(actual);
+    r.insertCell().textContent = hideNumbers ? "" : aspH;
+    r.insertCell().textContent = hideNumbers ? "" : asp;
   });
 
   wrap.appendChild(table);
@@ -8171,42 +9010,57 @@ function recomputeFromBTR(){
   
   
   
-  
-  /* ===== RAHU / KETU — TRUE vs MEAN (BTR SAFE OVERRIDE) ===== */
-if(window.__rawRahuAbs != null){
+ 
 
-  const rahuBase =
-    USE_TRUE_NODE && window.__rawRahuTrueAbs != null
-      ? window.__rawRahuTrueAbs
-      : window.__rawRahuAbs;
+ 
+ 
+ /* Average planetary motion in degrees per day */
+  const DAILY_MOTION = {
+    "Chandra": 13.17636,
+    "Surya": 0.98565,
+    "Mangala": 0.524,
+    "Budha": 1.383,
+    "Venus": 1.20,
+    "Jupiter": 0.083,
+    "Saturn": 0.033,
+    "Rahu": -0.0529,
+    "Ketu": -0.0529
+  };
 
-  window.__btrAbs["Rahu"] =
-    ((rahuBase + shiftDeg) % 360 + 360) % 360;
-}
-
-if(window.__rawKetuAbs != null){
-
-  const ketuBase =
-    USE_TRUE_NODE && window.__rawKetuTrueAbs != null
-      ? window.__rawKetuTrueAbs
-      : window.__rawKetuAbs;
-
-  window.__btrAbs["Ketu"] =
-    ((ketuBase + shiftDeg) % 360 + 360) % 360;
-}
-
-  
-  
-  
-  
+  /* ===== PLANETS (MEAN MOTION BTR SHIFT) ===== */
   const basePlanets = window.__lastSwissData.planets || {};
-  Object.keys(basePlanets).forEach(p=>{
-  if(p === "Rahu" || p === "Ketu" || p === "Rahu_true" || p === "Ketu_true") return;
-    if(typeof basePlanets[p] === "number"){
-      window.__btrAbs[p] =
-        ((basePlanets[p] + shiftDeg) % 360 + 360) % 360;
+  Object.keys(basePlanets).forEach(p => {
+    if (p === "Rahu" || p === "Ketu" || p === "Rahu_true" || p === "Ketu_true") return;
+    if (typeof basePlanets[p] === "number") {
+      let isRetro = window.__planetRetro && window.__planetRetro[p];
+      let speed = DAILY_MOTION[p] || 0;
+      
+      // If the planet is retrograde, it moves backward
+      if (isRetro) speed = -Math.abs(speed); 
+
+      let planetShiftDeg = (deltaSec / 86400) * speed;
+      window.__btrAbs[p] = ((basePlanets[p] + planetShiftDeg) % 360 + 360) % 360;
     }
   });
+
+  /* ===== RAHU / KETU — TRUE vs MEAN (BTR SAFE OVERRIDE) ===== */
+  if(window.__rawRahuAbs != null){
+    const rahuBase = (USE_TRUE_NODE && window.__rawRahuTrueAbs != null) ? window.__rawRahuTrueAbs : window.__rawRahuAbs;
+    let rahuShiftDeg = (deltaSec / 86400) * DAILY_MOTION["Rahu"];
+    window.__btrAbs["Rahu"] = ((rahuBase + rahuShiftDeg) % 360 + 360) % 360;
+  }
+
+  if(window.__rawKetuAbs != null){
+    const ketuBase = (USE_TRUE_NODE && window.__rawKetuTrueAbs != null) ? window.__rawKetuTrueAbs : window.__rawKetuAbs;
+    let ketuShiftDeg = (deltaSec / 86400) * DAILY_MOTION["Ketu"];
+    window.__btrAbs["Ketu"] = ((ketuBase + ketuShiftDeg) % 360 + 360) % 360;
+  }
+  
+  
+  
+  
+  
+  
 
     /* ===== SYNC UI INPUTS FROM BTR (VISUAL ONLY) ===== */
   Object.keys(window.__btrAbs).forEach(key => {
@@ -8411,9 +9265,13 @@ syncBTRUIFromTime = function(){
 
 
 
-<h2 id="table6" style="text-align:center">
+<h2 id="table6" style="text-align:center; cursor:pointer;">
 TABLE 6 - VEDIC ASPECTS
 </h2>
+
+
+
+
 
 <div style="text-align:center;margin-bottom:14px;font-weight:800">
   <label>
@@ -8689,7 +9547,721 @@ function attachVedicInteractions(tableId) {
 // Initial draw hook
 setTimeout(buildVedicAspectsTable, 100);
 document.getElementById("kundaliPivot")?.addEventListener("change", buildVedicAspectsTable);
+
+// Collapsible Logic
+document.getElementById("table6").addEventListener("click", function(){
+  const toggleDiv = this.nextElementSibling;
+  const container = document.getElementById("vedicAspectsContainer");
+  if(container.style.display === "none"){
+    container.style.display = "";
+    toggleDiv.style.display = "";
+  } else {
+    container.style.display = "none";
+    toggleDiv.style.display = "none";
+  }
+});
 </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<hr>
+
+<style>
+/* =========================================================
+   SIX STEP THEORY STYLES
+   ========================================================= */
+.four-step-card {
+    background: linear-gradient(180deg, #021b16 0%, #010a08 100%);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    box-shadow: 0 0 16px rgba(16,185,129,.15);
+    padding: 18px 24px;
+    font-family: 'Segoe UI', monospace, sans-serif;
+}
+/* Main Heading of the Card - Red Gradient with Yellow Text */
+.four-step-title {
+    color: #facc15; /* Yellow text */
+    background: linear-gradient(135deg, #7f1d1d 0%, #450a0a 100%);
+    border: 1px solid #ef4444;
+    padding: 6px 16px;
+    border-radius: 6px;
+    font-size: 20px;
+    font-weight: 900;
+    margin: 0 0 16px 0;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    box-shadow: 0 0 12px rgba(239, 68, 68, 0.25);
+    text-align: center;
+}
+.fs-row {
+    display: flex;
+    align-items: center; 
+    margin-bottom: 8px;
+    font-size: 15px;
+    line-height: 1.6;
+}
+.fs-label {
+    width: 250px;
+    font-weight: 900;
+    color: #ecfdf5;
+    flex-shrink: 0;
+    font-size: 15px;
+    border-right: 2px solid rgba(16, 185, 129, 0.3);
+    padding-right: 16px;
+    margin-right: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.fs-value {
+    flex-grow: 1;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+
+
+
+
+.fs-highlight {
+    color: #d4af37; /* gold */
+}
+/* Dark mode checkboxes */
+.pivotBar input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 15px;
+    height: 15px;
+    border: 1.5px solid #10b981;
+    border-radius: 3px;
+    background: #021b16;
+    cursor: pointer;
+    position: relative;
+    flex-shrink: 0;
+}
+.pivotBar input[type="checkbox"]:checked {
+    background: #10b981;
+}
+.pivotBar input[type="checkbox"]:checked::after {
+    content: '';
+    position: absolute;
+    left: 3px;
+    top: 0px;
+    width: 5px;
+    height: 9px;
+    border: 2px solid #021b16;
+    border-top: none;
+    border-left: none;
+    transform: rotate(45deg);
+}
+.pivotBar input[type="checkbox"]:hover {
+    border-color: #34d399;
+    box-shadow: 0 0 6px rgba(16,185,129,0.4);
+}
+
+
+
+.fs-comma {
+    color: #6b7280;
+    margin: 0 4px;
+}
+.fs-divider {
+    border: none;
+    border-top: 1px dashed rgba(16, 185, 129, 0.3);
+    margin: 12px 0;
+}
+</style>
+
+<h2 id="table7" style="text-align:center; cursor:pointer;">
+TABLE 7 - SIX STEP SIGNIFICATOR
+</h2>
+
+
+
+
+<div class="pivotBar" style="margin-top:20px; margin-bottom:20px; justify-content:center;">
+  <span>Pivot :</span>
+  <select id="fourStepPivot" style="font-weight: 800; background: #021b16; color: #ecfdf5; border: 1px solid #10b981; border-radius: 6px; padding: 6px; outline: none;"></select>
+  
+  <span style="margin-left:24px">Sort By :</span>
+  <select id="fourStepSort" style="font-weight: 800; background: #021b16; color: #ecfdf5; border: 1px solid #10b981; border-radius: 6px; padding: 6px; outline: none;">
+    <option value="__CHANDRA_STAR__" selected>Moon's Star Lord</option>
+    <option value="__LAGNA_STAR__">Lagna's Star Lord</option>
+    <option value="Surya">Surya</option>
+    <option value="Chandra">Chandra</option>
+    <option value="Mangala">Mangala</option>
+    <option value="Rahu">Rahu</option>
+    <option value="Jupiter">Jupiter</option>
+    <option value="Saturn">Saturn</option>
+    <option value="Budha">Budha</option>
+    <option value="Ketu">Ketu</option>
+    <option value="Venus">Venus</option>
+  </select>
+
+  <label style="cursor:pointer; display:flex; align-items:center; gap:4px; margin-left:24px; color:#facc15; font-size: 14px;">
+    <input type="checkbox" id="hidePlanetAspects" checked onchange="buildFourStepSignificator()">
+    Hide Planet Aspects
+  </label>
+
+  <label style="cursor:pointer; display:flex; align-items:center; gap:4px; margin-left:16px; color:#facc15; font-size: 14px;">
+    <input type="checkbox" id="showCuspalAspects" checked onchange="buildFourStepSignificator()">
+    Show Cusp & Cuspal Aspects
+  </label>
+
+  <label style="cursor:pointer; display:flex; align-items:center; gap:4px; margin-left:16px; color:#facc15; font-size: 14px;">
+    <input type="checkbox" id="hideAspectedBy" checked onchange="buildFourStepSignificator()">
+    Hide Aspected By
+  </label>
+
+  <label style="cursor:pointer; display:flex; align-items:center; gap:4px; margin-left:16px; color:#facc15; font-size: 14px;">
+    <input type="checkbox" id="hideConjunction" onchange="buildFourStepSignificator()">
+    Hide Conjunction
+  </label>
+  
+</div>
+
+<div id="fourStepContainer" style="max-width: 1300px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; margin-bottom: 40px; padding: 0 10px;">
+    </div>
+
+<div style="text-align:center; color:#facc15; font-weight:900; margin-bottom: 50px; font-size: 14px;">
+    <span style="margin-right:20px;">+ : Planet is in its Own Star</span>
+    <span style="margin-right:20px;">$ : UnTenanted</span>
+    <span style="margin-right:20px;">% : Own Star / Sub</span>
+    <span># : Star Exchange</span>
+</div>
+
+<script>
+document.getElementById("table7").addEventListener("click", function(){
+  const pivotBar = this.nextElementSibling;
+  const container1 = document.getElementById("fourStepContainer");
+  const container2 = container1.nextElementSibling; // the legend bottom text
+  
+  if(container1.style.display === "none"){
+    container1.style.display = "flex"; // container uses flex layout
+    pivotBar.style.display = "flex";
+    container2.style.display = "";
+  }else{
+    container1.style.display = "none";
+    pivotBar.style.display = "none";
+    container2.style.display = "none";
+  }
+});
+
+/* =========================================================
+   SIX STEP THEORY LOGIC ENGINE (NATIVE ENGINE PASSTHROUGH)
+   ========================================================= */
+
+(function initFourStep() {
+
+    let fp = document.getElementById("fourStepPivot");
+    let kp = document.getElementById("kundaliPivot");
+
+    if (fp && kp) {
+        fp.innerHTML = kp.innerHTML;
+        
+        let hasCsl = Array.from(kp.options).some(opt => opt.value.includes("CSL"));
+        if (!hasCsl) {
+            for(let i=1; i<=12; i++) {
+                kp.add(new Option(i+" CSL", i+"CSL"));
+                fp.add(new Option(i+" CSL", i+"CSL"));
+            }
+        }
+        fp.value = kp.value;
+        
+        // Initialize State Tracker for perfect syncing
+        window._lastFourStepPivot = fp.value;
+
+        // 1. LOCAL PIVOT CHANGED
+        fp.addEventListener("change", (e) => {
+            let val = e.target.value;
+            // Trigger Global Redraw natively
+            if (kp.value !== val) {
+                kp.value = val;
+                kp.dispatchEvent(new Event('change')); 
+            } else {
+                buildFourStepSignificator();
+            }
+        });
+
+        // 2. GLOBAL PIVOT CHANGED
+        kp.addEventListener("change", (e) => {
+            let val = e.target.value;
+            if (fp.value !== val) {
+                fp.value = val;
+            }
+            buildFourStepSignificator(); 
+        });
+    }
+
+    document.getElementById("fourStepSort")?.addEventListener("change", buildFourStepSignificator);
+    
+    const originalRedraw = window.redrawAll;
+    window.redrawAll = function() {
+        if(originalRedraw) originalRedraw();
+        buildFourStepSignificator();
+    };
+    
+    setTimeout(buildFourStepSignificator, 500); 
+})();
+
+function getPlanetLabel(p) {
+    if(!p || p === "-") return "-";
+    let label = p;
+    if(isRetroPlanet(p)) label += " (R)";
+    if(isTenantedPlanet(p)) label += " $"; 
+    if(isInOwnStarOrSub(p)) label += " %";
+    if(isStarExchangePlanet(p)) label += " #";
+    return label;
+}
+
+const BASE_PLANETS_6 = ["Surya","Chandra","Mangala","Rahu","Jupiter","Saturn","Budha","Ketu","Venus"];
+
+function isHouseEmptyOrSelf(h, ownerPlanet) {
+    let occupants = BASE_PLANETS_6.filter(pl => getHouseFromPivot(pl) == h);
+    if (occupants.length === 0) return true;
+    if (occupants.length === 1 && occupants[0] === ownerPlanet) return true;
+    return false;
+}
+
+function getRawCuspalConjuncts(entity) {
+    let baseAbs = getAbsDeg(entity);
+    if(baseAbs === null) return [];
+    let list = [];
+    
+    // 🔥 Find rotation offset based on current Pivot
+    let pivotRaw = document.getElementById("kundaliPivot")?.value || "Lagna";
+    let pivot = pivotRaw.replace("_2", "");
+    let pivotHouse = 1;
+    
+    if(pivot.endsWith("CSL")){
+        pivotHouse = parseInt(pivot, 10);
+    } else if (pivot !== "Lagna") {
+        pivotHouse = typeof getHouseFromLagna === "function" ? getHouseFromLagna(pivot) || 1 : 1;
+    }
+
+    for(let i = 1; i <= 12; i++){
+        let cuspAbs = getAbsDeg(i + "CSL");
+        if(cuspAbs === null) continue;
+        let diff = Math.abs(baseAbs - cuspAbs);
+        if(diff > 180) diff = 360 - diff;
+        
+        if(diff <= (3 + 20/60)) {
+            // Apply rotation to the cusp number
+            let rotatedCusp = i - pivotHouse + 1;
+            if(rotatedCusp <= 0) rotatedCusp += 12;
+            if(rotatedCusp > 12) rotatedCusp -= 12;
+            
+            list.push(rotatedCusp);
+        }
+    }
+    return list;
+}
+
+
+
+
+
+
+
+
+
+
+
+function getRawConjunctPlanets(entity) {
+    let baseAbs = getAbsDeg(entity);
+    if(baseAbs === null) return [];
+    let list = [];
+    BASE_PLANETS_6.forEach(p => {
+        if(p === entity) return;
+        let pAbs = getAbsDeg(p);
+        if(pAbs === null) return;
+        let diff = Math.abs(baseAbs - pAbs);
+        if(diff > 180) diff = 360 - diff;
+        if(diff <= 13) list.push(p);
+    });
+    return list;
+}
+
+function getRawAspectedBy(entity) {
+    let list = [];
+    let eHouse = getHouseFromPivot(entity);
+    BASE_PLANETS_6.forEach(p => {
+        if(p === entity) return;
+        if((entity==="Rahu" && p==="Ketu") || (entity==="Ketu" && p==="Rahu")) return;
+        let aspects = VEDIC_ASPECTS[p] || [7];
+        let pHouse = getHouseFromPivot(p);
+        aspects.forEach(a => {
+            let h = pHouse + (a - 1);
+            if(h > 12) h -= 12;
+            if(h === eHouse) list.push(p);
+        });
+    });
+    return [...new Set(list)];
+}
+
+function getPlanetFilteredDetails(pl) {
+    let h = getHouseFromPivot(pl) || "";
+    let fullName = pl;
+
+    if (pl === "Rahu" || pl === "Ketu") {
+        let disp = getDispositor(pl);
+        if (disp) {
+            let dispOcc = getHouseFromPivot(disp);
+            let dispLords = getHouseLordships(disp).split(",").filter(Boolean);
+            let dispFilteredArr = dispLords.filter(hx => isHouseEmptyOrSelf(hx, disp));
+            
+            // 🔥 Combine placement and lordships into one array and sort numerically
+            let combinedArr = [dispOcc, ...dispFilteredArr].filter(Boolean).map(Number).sort((a,b)=>a-b);
+            let dispFinal = combinedArr.join(",");
+            
+            if (dispFinal) return `${fullName} ( ${h} Disp ${disp} ${dispFinal} )`;
+            return `${fullName} ( ${h} Disp ${disp} )`;
+        }
+        return `${fullName} ( ${h} )`;
+    } else {
+        let baseLords = getHouseLordships(pl).split(",").filter(Boolean).sort((a,b)=>a-b);
+        let filtered = baseLords.filter(hx => isHouseEmptyOrSelf(hx, pl)).join(",");
+        
+        if (filtered) return `${fullName} ( ${h},${filtered} )`;
+        return `${fullName} ( ${h} )`;
+    }
+}
+
+function getSixStepSignificationsArray(p) {
+    if(!p || p === "-") return "";
+
+    let finalParts = [];
+    let hidePlanetAspects = document.getElementById("hidePlanetAspects")?.checked;
+    let showCuspalAspects = document.getElementById("showCuspalAspects")?.checked;
+    let hideAspectedBy = document.getElementById("hideAspectedBy")?.checked;
+
+    // 1. Placement & Lordships (Emerald Green)
+    let part1 = "";
+    let h = getHouseFromPivot(p) || "";
+    
+    if (p === "Rahu" || p === "Ketu") {
+        let disp = getDispositor(p);
+        if (disp) {
+            let dispOcc = getHouseFromPivot(disp);
+            let dispLords = getHouseLordships(disp).split(",").filter(Boolean);
+            let dispFilteredArr = dispLords.filter(hx => isHouseEmptyOrSelf(hx, disp));
+            
+            // 🔥 Combine and sort numerically
+            let combinedArr = [dispOcc, ...dispFilteredArr].filter(Boolean).map(Number).sort((a,b)=>a-b);
+            let dispFinal = combinedArr.join(",");
+            part1 = dispFinal ? `${h} ( Disp ${disp} ${dispFinal} )` : `${h} ( Disp ${disp} )`;
+        } else {
+            part1 = `${h}`;
+        }
+    } else {
+        let baseLords = getHouseLordships(p).split(",").filter(Boolean).sort((a,b)=>a-b);
+        let filtered = baseLords.filter(hx => isHouseEmptyOrSelf(hx, p)).join(",");
+        part1 = filtered ? `${h},${filtered}` : `${h}`;
+    }
+    if (part1) finalParts.push(`<span style="color:#34d399;">${part1}</span>`);
+
+    // 2. Aspecting Houses & Planets (Yellow - Hidden if Checked)
+    if (!hidePlanetAspects) {
+        let aspHousesBase = getAspectingHouses(p);
+        let aspPlanetsBase = getAspectingPlanets(p);
+        if (aspHousesBase) {
+            let aspectingStr = aspHousesBase.replace(/,/g, " ");
+            if (aspPlanetsBase) {
+                aspectingStr += ` , ` + aspPlanetsBase.split(", ").join(" , ");
+            }
+            let part2 = `( Aspecting- ${aspectingStr} )`;
+            finalParts.push(`<span style="color:#facc15;">${part2}</span>`);
+        }
+    }
+
+    // 3. Cuspal Conjunctions & Cuspal Aspects (Hidden entirely if unchecked)
+    if (showCuspalAspects) {
+        let rawCuspalBase = getRawCuspalConjuncts(p);
+        if (rawCuspalBase.length > 0) {
+            let part3Arr = rawCuspalBase.map(c => {
+                // Base Conjunction (Pink)
+                let baseStr = `<span style="color:#f472b6;">${c} ( Cusp )</span>`;
+                
+                // Cuspal Aspecting (Orange)
+                let aspects = VEDIC_ASPECTS[p] || [7];
+                let aspHouses = aspects.map(a => ((c + a - 2) % 12) + 1).sort((a,b)=>a-b);
+                baseStr += ` <span style="color:#fb923c;">( Aspecting- ${aspHouses.join(" ")} )</span>`;
+                
+                return baseStr;
+            });
+            
+            let part3 = part3Arr.join(" <span class='fs-comma'>,</span> ");
+            finalParts.push(part3); 
+        }
+    }
+
+    // 4. Planet Conjunctions (Blue)
+    let hideConjunction = document.getElementById("hideConjunction")?.checked;
+    if (!hideConjunction) {
+        let rawConj = getRawConjunctPlanets(p);
+        if (rawConj.length > 0) {
+            let part4Str = rawConj.map(cp => getPlanetFilteredDetails(cp)).join(" <span class='fs-comma'>,</span> ");
+            let part4 = `[ Conj - ${part4Str} ]`;
+            finalParts.push(`<span style="color:#60a5fa;">${part4}</span>`);
+        }
+    }
+
+    // 5. Aspected By (Purple - Hidden if Checked)
+    if (!hideAspectedBy) {
+        let rawAspectedBy = getRawAspectedBy(p);
+        if (rawAspectedBy.length > 0) {
+            let aspectedByStrs = rawAspectedBy.map(cp => getPlanetFilteredDetails(cp)).join(" <span class='fs-comma'>,</span> ");
+            let part5 = `( Aspected By- ${aspectedByStrs} )`;
+            finalParts.push(`<span style="color:#c084fc;">${part5}</span>`);
+        }
+    }
+
+    return finalParts.join(" <span class='fs-comma'>,</span> ");
+}
+
+function buildFourStepSignificator() {
+    let container = document.getElementById("fourStepContainer");
+    if(!container) return;
+    container.innerHTML = "";
+    
+    let fp = document.getElementById("fourStepPivot");
+    let sortSel = document.getElementById("fourStepSort");
+    let currentPivot = fp ? fp.value : "Lagna";
+    let cleanPivot = currentPivot.replace("_2", ""); // 🔥 Strip the duplicate suffix for syncing
+    
+    // 🔥 RACE-CONDITION KILLER: 
+    // Synchronize the Sort By dropdown exactly BEFORE drawing the table
+    if (window._lastFourStepPivot !== cleanPivot) {
+        if (sortSel && BASE_PLANETS_6.includes(cleanPivot)) {
+            sortSel.value = cleanPivot; // Force sort to match selected planet
+        }
+        window._lastFourStepPivot = cleanPivot; // Lock in state
+    }
+    
+    let sortMode = sortSel ? sortSel.value : "__CHANDRA_STAR__";
+    let order = [...BASE_PLANETS_6];
+
+    // Determine Base Sorting Order
+    if (sortMode === "__CHANDRA_STAR__") {
+        let star = getStarLord("Chandra");
+        if(BASE_PLANETS_6.includes(star)) {
+            let idx = BASE_PLANETS_6.indexOf(star);
+            order = [...BASE_PLANETS_6.slice(idx), ...BASE_PLANETS_6.slice(0, idx)];
+        }
+    } else if (sortMode === "__LAGNA_STAR__") {
+        let star = getStarLord("Lagna");
+        if(BASE_PLANETS_6.includes(star)) {
+            let idx = BASE_PLANETS_6.indexOf(star);
+            order = [...BASE_PLANETS_6.slice(idx), ...BASE_PLANETS_6.slice(0, idx)];
+        }
+    } else if (BASE_PLANETS_6.includes(sortMode)) {
+        let idx = BASE_PLANETS_6.indexOf(sortMode);
+        order = [...BASE_PLANETS_6.slice(idx), ...BASE_PLANETS_6.slice(0, idx)];
+    }
+
+    // Build the visual blocks
+    order.forEach(planet => {
+        let step1 = planet;
+        let step2 = getStarLord(planet);
+        let step3 = getSubLord(planet);
+        let step4 = getStarOfSubLord(planet);
+        let step5 = getSubSubLord(planet);
+        let step6 = getStarOfSubSub(planet);
+
+        let isSelfStar = (planet === step2) ? " (+)" : "";
+
+        let html = `
+        <div class="four-step-card">
+            <div class="four-step-title">${getPlanetLabel(planet)}${isSelfStar}</div>
+            
+            <div class="fs-row">
+                <div class="fs-label">
+                    <span>Planet</span>
+                    <span class="fs-highlight">${getPlanetLabel(step1)}</span>
+                </div>
+                <div class="fs-value">${getSixStepSignificationsArray(step1)}</div>
+            </div>
+            
+            <div class="fs-row">
+                <div class="fs-label">
+                    <span>Star Lord</span>
+                    <span class="fs-highlight">${getPlanetLabel(step2)}</span>
+                </div>
+                <div class="fs-value">${getSixStepSignificationsArray(step2)}</div>
+            </div>
+            
+            <hr class="fs-divider">
+
+            <div class="fs-row">
+                <div class="fs-label">
+                    <span>Sub Lord</span>
+                    <span class="fs-highlight">${getPlanetLabel(step3)}</span>
+                </div>
+                <div class="fs-value">${getSixStepSignificationsArray(step3)}</div>
+            </div>
+            
+            <div class="fs-row">
+                <div class="fs-label">
+                    <span>Star of Sub Lord</span>
+                    <span class="fs-highlight">${getPlanetLabel(step4)}</span>
+                </div>
+                <div class="fs-value">${getSixStepSignificationsArray(step4)}</div>
+            </div>
+
+            <hr class="fs-divider">
+
+            <div class="fs-row">
+                <div class="fs-label">
+                    <span>Sub-Sub Lord</span>
+                    <span class="fs-highlight">${getPlanetLabel(step5)}</span>
+                </div>
+                <div class="fs-value">${getSixStepSignificationsArray(step5)}</div>
+            </div>
+
+            <div class="fs-row">
+                <div class="fs-label">
+                    <span>Star of Sub-Sub</span>
+                    <span class="fs-highlight">${getPlanetLabel(step6)}</span>
+                </div>
+                <div class="fs-value">${getSixStepSignificationsArray(step6)}</div>
+            </div>
+        </div>`;
+        
+        container.innerHTML += html;
+    });
+}
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+/* =========================================================
+   TOP BAR DUPLICATE CONTROLS SYNC LOGIC (FIXED)
+   ========================================================= */
+document.addEventListener("DOMContentLoaded", () => {
+    const syncPairs = [
+        { top: "removeOccupiedGlobal", main: "removeOccupiedToggle", isSelect: false },
+        { top: "untenantedGlobal", main: "untenantedToggle", isSelect: false },
+        { top: "kpMode_top", main: "kpMode", isSelect: false },
+        { top: "sign2signMode_top", main: "sign2signMode", isSelect: false },
+        { top: "originalLagnaMode_top", main: "originalLagnaMode", isSelect: false },
+        { top: "trueNodeMode_top", main: "trueNodeMode", isSelect: false },
+        { top: "kundaliPivot_top", main: "kundaliPivot", isSelect: true }
+    ];
+
+    // 1. Copy dropdown options from the main Kundali Pivot
+    setTimeout(() => {
+        const mainPivot = document.getElementById("kundaliPivot");
+        const topPivot = document.getElementById("kundaliPivot_top");
+        if (mainPivot && topPivot) {
+            topPivot.innerHTML = mainPivot.innerHTML;
+            topPivot.value = mainPivot.value;
+        }
+    }, 150);
+
+    // 2. Define the Universal Visual Sync Function (Forces Top to match Main)
+    window.syncTopBarUI = function() {
+        syncPairs.forEach(pair => {
+            const topEl = document.getElementById(pair.top);
+            const mainEl = document.getElementById(pair.main);
+            if(topEl && mainEl) {
+                if(pair.isSelect) {
+                    if(topEl.value !== mainEl.value) topEl.value = mainEl.value;
+                } else {
+                    if(topEl.checked !== mainEl.checked) topEl.checked = mainEl.checked;
+                }
+            }
+        });
+    };
+
+    // 3. Top -> Main Interactions (When user clicks the TOP bar)
+    syncPairs.forEach(pair => {
+        const topEl = document.getElementById(pair.top);
+        const mainEl = document.getElementById(pair.main);
+        
+        if(topEl && mainEl) {
+            topEl.addEventListener("change", (e) => {
+                if(pair.isSelect) {
+                    mainEl.value = e.target.value;
+                    mainEl.dispatchEvent(new Event("change"));
+                } else {
+                    // Match the state in the background
+                    mainEl.checked = e.target.checked;
+                    
+                    // Explicitly route to your native logic
+                    if (pair.main === "kpMode" && e.target.checked) {
+                        if(typeof enforceMode === "function") enforceMode("kp");
+                    } else if (pair.main === "sign2signMode" && e.target.checked) {
+                        if(typeof enforceMode === "function") enforceMode("sign");
+                    } else if (pair.main === "originalLagnaMode") {
+                        // Manual trigger for Shift button logic
+                        let sel = document.getElementById("lagnaOverride");
+                        if(sel) sel.disabled = e.target.checked;
+                        if(typeof redrawAll === "function") redrawAll();
+                    } else {
+                        // Fallback trigger (True Node, etc.)
+                        mainEl.dispatchEvent(new Event("change"));
+                    }
+                }
+                // Force visual sync immediately after click
+                window.syncTopBarUI();
+            });
+        }
+    });
+
+    // 4. Hook syncTopBarUI into your native redrawAll engine so it NEVER desyncs
+    if (typeof window.redrawAll === "function") {
+        const _baseRedrawForSync = window.redrawAll;
+        window.redrawAll = function() {
+            _baseRedrawForSync();
+            window.syncTopBarUI();
+        };
+    }
+});
+</script>
+
+
+
 
 
 
