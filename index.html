@@ -5162,7 +5162,6 @@ function getHouseLordships(planet){
 
 
 
-
 /* =========================================================
    GLOBAL FILTER: REMOVE OCCUPIED LORDSHIPS (NEW ENGINE)
    ========================================================= */
@@ -5177,7 +5176,23 @@ function getFilteredLordships(planet) {
     }
 
     const BASE_PLANETS = ["Surya","Chandra","Mangala","Rahu","Jupiter","Saturn","Budha","Ketu","Venus"];
-    let occupiedByOthers = new Set();
+    
+    // NEW RULE: Count total planets in each house
+    let houseCounts = {};
+    BASE_PLANETS.forEach(p => {
+        let h = Number(getHouseFromPivot(p));
+        if (h) {
+            houseCounts[h] = (houseCounts[h] || 0) + 1;
+        }
+    });
+
+    // A house is considered heavily occupied ONLY IF 2 or more planets are present
+    let housesToRemove = new Set();
+    for (let h in houseCounts) {
+        if (houseCounts[h] >= 2) {
+            housesToRemove.add(Number(h));
+        }
+    }
     
     if (planet === "Rahu" || planet === "Ketu") {
         // --- RAHU & KETU LOGIC ---
@@ -5196,15 +5211,8 @@ function getFilteredLordships(planet) {
         // B) Lordship Houses (Subject to filtering)
         let ruled = getHouseLordships(dispositor).split(",").filter(Boolean).map(Number);
 
-        // C) Find Occupied Houses (Skip the Node itself)
-        BASE_PLANETS.forEach(p => {
-            if (p === planet) return; 
-            let h = getHouseFromPivot(p);
-            if(h) occupiedByOthers.add(Number(h));
-        });
-
-        // D) Filter ONLY the ruled houses
-        let filteredRuled = ruled.filter(h => !occupiedByOthers.has(h));
+        // C & D) Filter ONLY the ruled houses against the new 2+ planet rule
+        let filteredRuled = ruled.filter(h => !housesToRemove.has(h));
 
         // E) Combine Protected Placements + Filtered Ruled Houses
         let finalHouses = [...new Set([...placements, ...filteredRuled])].sort((a,b)=>a-b);
@@ -5215,18 +5223,24 @@ function getFilteredLordships(planet) {
         let lordsStr = getHouseLordships(planet);
         if (!lordsStr) return "";
 
-        BASE_PLANETS.forEach(p => {
-            if (p === planet) return; 
-            let h = getHouseFromPivot(p);
-            if(h) occupiedByOthers.add(Number(h));
-        });
-
         let lordsArr = lordsStr.split(",").map(Number).filter(n => !isNaN(n) && n !== 0);
-        let filteredArr = lordsArr.filter(h => !occupiedByOthers.has(h));
+        
+        // Filter out houses that have 2 or more planets
+        let filteredArr = lordsArr.filter(h => !housesToRemove.has(h));
         
         return filteredArr.join(",");
     }
 }
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -9848,9 +9862,10 @@ const BASE_PLANETS_6 = ["Surya","Chandra","Mangala","Rahu","Jupiter","Saturn","B
 
 function isHouseEmptyOrSelf(h, ownerPlanet) {
     let occupants = BASE_PLANETS_6.filter(pl => getHouseFromPivot(pl) == h);
-    if (occupants.length === 0) return true;
-    if (occupants.length === 1 && occupants[0] === ownerPlanet) return true;
-    return false;
+    
+    // NEW RULE: Keep the house lordship if it has fewer than 2 planets (0 or 1).
+    // Only remove the lordship if there are 2 or more planets present.
+    return occupants.length < 2;
 }
 
 function getRawCuspalConjuncts(entity) {
