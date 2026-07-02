@@ -1093,7 +1093,7 @@ tr.selectedRow[data-color="bloodred"] td {
 
   <!-- NEW: Global Untenanted Toggle -->
   <label style="color:#facc15; font-size:13px; font-weight:800; cursor:pointer; display:flex; align-items:center; gap:4px; margin-right:4px;">
-    <input type="checkbox" id="untenantedGlobal"> Untenanted
+    <input type="checkbox" id="untenantedGlobal"> Unt
   </label>
 
   <label style="color:#ecfdf5; font-size:13px; font-weight:800; cursor:pointer; display:flex; align-items:center; gap:4px; margin-right:4px;">
@@ -1110,11 +1110,32 @@ tr.selectedRow[data-color="bloodred"] td {
   <label style="color:#ecfdf5; font-size:13px; font-weight:800; cursor:pointer; display:flex; align-items:center; gap:4px; margin-right:4px;">
     <input type="checkbox" id="trueNodeMode_top" checked> True
   </label>
+  <label style="color:#facc15; font-size:13px; font-weight:800; cursor:pointer; display:flex; align-items:center; gap:4px; margin-right:4px;" title="Sign-to-Sign Aspects">
+    <input type="checkbox" id="s2sAspectsMode_top" checked> S2S Asp
+  </label>
 
   <span style="color:var(--border); margin: 0 4px; opacity: 0.5;">|</span>
 
   <select id="kundaliPivot_top" style="background:#010a08; color:#facc15; border:1px solid #10b981; border-radius:6px; font-weight:800; font-size:13px; padding:4px 8px; outline:none; cursor:pointer; box-shadow:inset 0 0 6px rgba(16,185,129,.35);">
     </select>
+
+  <span style="color:var(--border); margin: 0 4px; opacity: 0.5;">|</span>
+
+  <select id="taraMode_top" style="background:#010a08; color:#facc15; border:1px solid #10b981; border-radius:6px; font-weight:800; font-size:13px; padding:4px 8px; outline:none; cursor:pointer; box-shadow:inset 0 0 6px rgba(16,185,129,.35);">
+    <option value="SSL_OF_CHANDRA" selected>SSL OF Chandra</option>
+    <option value="SL_OF_CHANDRA">SL OF Chandra</option>
+    <option value="NL_OF_CHANDRA">NL OF Chandra</option>
+    <option value="Star Lord">Star Lord</option>
+    <option value="Surya">Surya</option>
+    <option value="Chandra">Chandra</option>
+    <option value="Mangala">Mangala</option>
+    <option value="Rahu">Rahu</option>
+    <option value="Jupiter">Jupiter</option>
+    <option value="Saturn">Saturn</option>
+    <option value="Budha">Budha</option>
+    <option value="Ketu">Ketu</option>
+    <option value="Venus">Venus</option>
+  </select>
 
 </div>
 
@@ -1124,11 +1145,38 @@ tr.selectedRow[data-color="bloodred"] td {
 
 
 
+<script>
 
+// Sync Tara mode between main section and top floating bar with native redraw
+document.addEventListener("DOMContentLoaded", () => {
+    const mainTara = document.getElementById("taraMode");
+    const topTara = document.getElementById("taraMode_top");
 
+    if (mainTara && topTara) {
+        // Copy initial value just in case
+        topTara.value = mainTara.value;
 
+        // Main -> Top Bar
+        mainTara.addEventListener("change", (e) => {
+            if (topTara.value !== e.target.value) {
+                topTara.value = e.target.value;
+            }
+        });
 
+        // Top Bar -> Main
+        topTara.addEventListener("change", (e) => {
+            if (mainTara.value !== e.target.value) {
+                mainTara.value = e.target.value;
+            }
+            // Trigger the native redraw across all tables when changed from the top bar
+            if (typeof redrawAll === "function") {
+                redrawAll();
+            }
+        });
+    }
+});
 
+</script>
 
 
 
@@ -2234,7 +2282,8 @@ function resetUIState() {
     westAspMode: true, trueNodeMode: true, rotateCuspalMode: true,
     rotateDynamicCuspalMode: true, modeDateHide: true, modeKN: true,
     removeOccupiedToggle: true, // 🔥 Forces Occupied to be ON by default upon load/reset
-    untenantedToggle: false // 🔥 Untenanted defaults to OFF
+    untenantedToggle: false, // 🔥 Untenanted defaults to OFF
+    s2sAspectsMode: true, s2sAspectsMode_top: true // 🔥 Default to S2S Aspects
   };
   
   for (let id in checks) {
@@ -2432,6 +2481,11 @@ function applyLevelTheme(){
     <label style="cursor:pointer; display:flex; align-items:center; gap:4px; margin-left:8px; color:#facc15;">
       <input type="checkbox" id="originalLagnaMode">
       Original
+    </label>
+
+    <label style="cursor:pointer; display:flex; align-items:center; gap:4px; margin-left:8px; color:#facc15;" title="Sign-to-Sign Aspects">
+      <input type="checkbox" id="s2sAspectsMode" checked onchange="redrawAll()">
+      S2S Asp
     </label>
 
   </div>
@@ -6467,12 +6521,23 @@ function getAspectingHouses(planet){
   let baseHouse = getHouseFromPivot(planet);
   if(!baseHouse) return "";
 
+  let isS2S = document.getElementById("s2sAspectsMode")?.checked;
+  let baseSign = Math.floor(getAbsDeg(planet) / 30);
+  let pivotAbs = getPivotAbs(document.getElementById("kundaliPivot")?.value || "Lagna");
+  let pivotSign = pivotAbs !== null ? Math.floor(pivotAbs / 30) : 0;
+
   let aspects = VEDIC_ASPECTS[planet] || [7];
 
   let houses = aspects.map(a=>{
-    let h = baseHouse + (a - 1);
-    if(h > 12) h -= 12;
-    return h;
+    if (isS2S) {
+      let targetSign = (baseSign + a - 1) % 12;
+      let h = (targetSign - pivotSign + 12) % 12 + 1;
+      return h;
+    } else {
+      let h = baseHouse + (a - 1);
+      if(h > 12) h -= 12;
+      return h;
+    }
   });
 
   return houses.join(",");
@@ -6499,6 +6564,9 @@ function getAspectingPlanets(entity){
   let baseHouse = getHouseFromPivot(entity);
   if(!baseHouse) return "";
 
+  let isS2S = document.getElementById("s2sAspectsMode")?.checked;
+  let baseSign = Math.floor(getAbsDeg(entity) / 30);
+
   /* aspects of the GIVEN planet */
   let aspects = VEDIC_ASPECTS[entity] || [7];
 
@@ -6506,10 +6574,7 @@ function getAspectingPlanets(entity){
 
     let targetHouse = baseHouse + (a - 1);
     if(targetHouse > 12) targetHouse -= 12;
-
-
-
-
+    let targetSign = (baseSign + a - 1) % 12;
 
     /* search which planets are sitting in this house */
     planets.forEach(p => {
@@ -6525,12 +6590,15 @@ function getAspectingPlanets(entity){
         return;
       }
 
-      let pHouse = getHouseFromPivot(p);
-      if(pHouse !== targetHouse) return;
+      if (isS2S) {
+        let pSign = Math.floor(getAbsDeg(p) / 30);
+        if (pSign !== targetSign) return;
+      } else {
+        let pHouse = getHouseFromPivot(p);
+        if(pHouse !== targetHouse) return;
+      }
 
       result.push(PLANET_SHORT[p]);
-
-
     });
   });
 
@@ -6551,6 +6619,10 @@ function getAspectedBy(entity){
 
   let list = [];
 
+  let eHouse = getHouseFromPivot(entity);
+  let isS2S = document.getElementById("s2sAspectsMode")?.checked;
+  let eSign = Math.floor(getAbsDeg(entity) / 30);
+
   planets.forEach(p=>{
 
     if(p === "Lagna") return;
@@ -6566,13 +6638,16 @@ function getAspectedBy(entity){
 
     let aspects = VEDIC_ASPECTS[p] || [7];
     let pHouse = getHouseFromPivot(p);
-    let eHouse = getHouseFromPivot(entity);
+    let pSign = Math.floor(getAbsDeg(p) / 30);
 
     aspects.forEach(a=>{
-      let h = pHouse + (a - 1);
-      if(h > 12) h -= 12;
+      let targetHouse = pHouse + (a - 1);
+      if(targetHouse > 12) targetHouse -= 12;
+      let targetSign = (pSign + a - 1) % 12;
 
-      if(h === eHouse){
+      let isAspecting = isS2S ? (targetSign === eSign) : (targetHouse === eHouse);
+
+      if(isAspecting){
 
         let set = new Set();
 
@@ -7380,9 +7455,21 @@ const PLL_PLANETS = getPLLPlanetOrder(pivot);
 
     /* 🔥 UNTENANTED FILTER LOGIC */
     let isUntenantedMode = document.getElementById("untenantedToggle")?.checked;
-    let isTargetLevel = (level === "Planet" || level === "Sub Lord" || level === "Sub-Sub");
-    let hasDollar = isTenantedPlanet(actual);
-    let hideNumbers = isUntenantedMode && isTargetLevel && !hasDollar;
+    let hideNumbers = false;
+
+    if (isUntenantedMode) {
+        let baseLevel = level.replace("Star of ", "").replace("Star Lord", "Planet");
+        let baseEntity = resolveEntity(p, baseLevel);
+        
+        let hasSymbol = isTenantedPlanet(baseEntity) || isInOwnStarOrSub(baseEntity);
+        let isStarRow = level.includes("Star");
+
+        if (hasSymbol) {
+            hideNumbers = isStarRow;
+        } else {
+            hideNumbers = !isStarRow;
+        }
+    }
 
 	// TARA
 	r.insertCell().textContent = hideNumbers ? "" : getTaraLabel(actual, p);
@@ -8414,9 +8501,21 @@ function buildCuspalPromiseTable(bhava, planet){
 
     /* 🔥 UNTENANTED FILTER LOGIC */
     let isUntenantedMode = document.getElementById("untenantedToggle")?.checked;
-    let isTargetLevel = (level === "Planet" || level === "Sub Lord" || level === "Sub-Sub");
-    let hasDollar = isTenantedPlanet(actual);
-    let hideNumbers = isUntenantedMode && isTargetLevel && !hasDollar;
+    let hideNumbers = false;
+
+    if (isUntenantedMode) {
+        let baseLevel = level.replace("Star of ", "").replace("Star Lord", "Planet");
+        let baseEntity = resolveEntity(planet, baseLevel);
+        
+        let hasSymbol = isTenantedPlanet(baseEntity) || isInOwnStarOrSub(baseEntity);
+        let isStarRow = level.includes("Star");
+
+        if (hasSymbol) {
+            hideNumbers = isStarRow;
+        } else {
+            hideNumbers = !isStarRow;
+        }
+    }
 
     /* ---------- ROTATED OUTPUT (CUSPAL MODE SAFE) ---------- */
 
@@ -8651,7 +8750,8 @@ function buildDynamicCuspalPromiseTable(bhava, planet){
     let isUntenantedMode = document.getElementById("untenantedToggle")?.checked;
     let isTargetLevel = (level === "Planet" || level === "Sub Lord" || level === "Sub-Sub");
     let hasDollar = isTenantedPlanet(actual);
-    let hideNumbers = isUntenantedMode && isTargetLevel && !hasDollar;
+    let hasPercent = isInOwnStarOrSub(actual);
+    let hideNumbers = isUntenantedMode && isTargetLevel && !hasDollar && !hasPercent;
 
     /* 🔁 INTERNAL ROTATION (AUTO, NO CHECKBOX) */
   let house = bhava === 1
@@ -10201,6 +10301,7 @@ document.addEventListener("DOMContentLoaded", () => {
         { top: "sign2signMode_top", main: "sign2signMode", isSelect: false },
         { top: "originalLagnaMode_top", main: "originalLagnaMode", isSelect: false },
         { top: "trueNodeMode_top", main: "trueNodeMode", isSelect: false },
+        { top: "s2sAspectsMode_top", main: "s2sAspectsMode", isSelect: false },
         { top: "kundaliPivot_top", main: "kundaliPivot", isSelect: true }
     ];
 
