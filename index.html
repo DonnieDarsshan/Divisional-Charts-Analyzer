@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -1419,9 +1417,9 @@ document.addEventListener("DOMContentLoaded", () => {
         <div class="form-group">
             <span style="font-size: 14px;">&#x1F4C5; Date (DD-MM-YYYY)</span>
             <div style="display:flex; gap:8px; align-items:center;">
-                <input type="text" id="onDay" placeholder="DD" maxlength="2" style="width:50px; text-align:center; font-size: 14px;" onkeydown="arrowSpinner(event, 1, 31, 2)" oninput="smartJump(this, 'onMonth', 'day')"> -
-                <input type="text" id="onMonth" placeholder="MM" maxlength="2" style="width:50px; text-align:center; font-size: 14px;" onkeydown="arrowSpinner(event, 1, 12, 2)" oninput="smartJump(this, 'onYear', 'month')"> -
-                <input type="text" id="onYear" placeholder="YYYY" maxlength="4" style="width:75px; text-align:center; font-size: 14px;" onkeydown="arrowSpinner(event, 1900, 2100, 4)" oninput="smartJump(this, 'onHour', 'year')">
+                <input type="text" id="onDay" placeholder="DD" maxlength="2" style="width:50px; text-align:center; font-size: 14px;" onkeydown="arrowSpinner(event, 1, 31, 2)" oninput="smartJump(this, 'onMonth', 'day'); calculateNativeAge()"> -
+                <input type="text" id="onMonth" placeholder="MM" maxlength="2" style="width:50px; text-align:center; font-size: 14px;" onkeydown="arrowSpinner(event, 1, 12, 2)" oninput="smartJump(this, 'onYear', 'month'); calculateNativeAge()"> -
+                <input type="text" id="onYear" placeholder="YYYY" maxlength="4" style="width:75px; text-align:center; font-size: 14px;" onkeydown="arrowSpinner(event, 1900, 2100, 4)" oninput="smartJump(this, 'onHour', 'year'); calculateNativeAge()">
             </div>
         </div>
 
@@ -1436,13 +1434,18 @@ document.addEventListener("DOMContentLoaded", () => {
         
         <div class="form-group">
             <span style="font-size: 14px;">&#x1F4CD; Standard Places</span>
-            <select id="locationPreset" onchange="applyPresetLocation()" style="width: 190px; font-size: 14px;">
-                <option value="manual">Manual GPS (Default)</option>
-                <option value="13.3190737,77.1326306">Tumakuru</option>
-                <option value="12.918880,77.634986">Bengaluru</option>
-                <option value="13.315527,76.942059">Gubbi</option>
-                <option value="12.304776,76.655108">Mysore</option>
-            </select>
+            <div style="display:flex; gap:15px; align-items:center;">
+                <select id="locationPreset" onchange="applyPresetLocation()" style="width: 190px; font-size: 14px;">
+                    <option value="manual">Manual GPS (Default)</option>
+                    <option value="13.3190737,77.1326306">Tumakuru</option>
+                    <option value="12.918880,77.634986">Bengaluru</option>
+                    <option value="13.315527,76.942059">Gubbi</option>
+                    <option value="12.304776,76.655108">Mysore</option>
+                </select>
+                <div id="nativeAgeDisplay" style="color: #10b981; font-weight: 900; font-size: 15px; letter-spacing: 0.5px; background: #010a08; padding: 4px 14px; border: 1px solid #10b981; border-radius: 4px; box-shadow: inset 0 0 6px rgba(16,185,129,.2); min-width: 250px; text-align: center;">
+                    Age : &nbsp;-- years &nbsp;:&nbsp; -- months &nbsp;:&nbsp; -- days
+                </div>
+            </div>
         </div>
     </div>
     
@@ -1459,6 +1462,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     <option value="N" selected>N</option><option value="S">S</option>
                 </select>
                 <input type="text" id="dmsLatMin" value="20" style="width:45px; text-align:center; font-size: 14px;" oninput="syncCoords('dms')"><span style="color:#facc15;">'</span>
+                <input type="text" id="dmsLatSec" value="24" style="width:45px; text-align:center; font-size: 14px;" oninput="syncCoords('dms')"><span style="color:#facc15;">"</span>
                 
                 <span style="color:var(--grid-line); margin:0 8px;">|</span>
                 
@@ -1467,6 +1471,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     <option value="E" selected>E</option><option value="W">W</option>
                 </select>
                 <input type="text" id="dmsLonMin" value="06" style="width:45px; text-align:center; font-size: 14px;" oninput="syncCoords('dms')"><span style="color:#facc15;">'</span>
+                <input type="text" id="dmsLonSec" value="02" style="width:45px; text-align:center; font-size: 14px;" oninput="syncCoords('dms')"><span style="color:#facc15;">"</span>
             </div>
         </div>
     </div>
@@ -1518,25 +1523,46 @@ document.addEventListener("DOMContentLoaded", () => {
         if(source === 'dec') {
             let lat = parseFloat(document.getElementById('onlineLat').value) || 0;
             let lon = parseFloat(document.getElementById('onlineLon').value) || 0;
+            
             document.getElementById('dmsLatDir').value = lat >= 0 ? 'N' : 'S';
             lat = Math.abs(lat);
-            document.getElementById('dmsLatDeg').value = Math.floor(lat);
-            document.getElementById('dmsLatMin').value = Math.floor((lat - Math.floor(lat)) * 60).toString().padStart(2, '0');
+            let latDeg = Math.floor(lat);
+            let latMinFloat = (lat - latDeg) * 60;
+            let latMin = Math.floor(latMinFloat);
+            let latSec = Math.round((latMinFloat - latMin) * 60);
+            if(latSec === 60) { latSec = 0; latMin++; }
+            if(latMin === 60) { latMin = 0; latDeg++; }
+            document.getElementById('dmsLatDeg').value = latDeg;
+            document.getElementById('dmsLatMin').value = latMin.toString().padStart(2, '0');
+            document.getElementById('dmsLatSec').value = latSec.toString().padStart(2, '0');
+            
             document.getElementById('dmsLonDir').value = lon >= 0 ? 'E' : 'W';
             lon = Math.abs(lon);
-            document.getElementById('dmsLonDeg').value = Math.floor(lon);
-            document.getElementById('dmsLonMin').value = Math.floor((lon - Math.floor(lon)) * 60).toString().padStart(2, '0');
+            let lonDeg = Math.floor(lon);
+            let lonMinFloat = (lon - lonDeg) * 60;
+            let lonMin = Math.floor(lonMinFloat);
+            let lonSec = Math.round((lonMinFloat - lonMin) * 60);
+            if(lonSec === 60) { lonSec = 0; lonMin++; }
+            if(lonMin === 60) { lonMin = 0; lonDeg++; }
+            document.getElementById('dmsLonDeg').value = lonDeg;
+            document.getElementById('dmsLonMin').value = lonMin.toString().padStart(2, '0');
+            document.getElementById('dmsLonSec').value = lonSec.toString().padStart(2, '0');
+            
         } else if (source === 'dms') {
             let latDeg = parseFloat(document.getElementById('dmsLatDeg').value) || 0;
             let latMin = parseFloat(document.getElementById('dmsLatMin').value) || 0;
+            let latSec = parseFloat(document.getElementById('dmsLatSec').value) || 0;
             let latDir = document.getElementById('dmsLatDir').value;
-            let lat = latDeg + (latMin / 60);
+            let lat = latDeg + (latMin / 60) + (latSec / 3600);
             if (latDir === 'S') lat = -lat;
+            
             let lonDeg = parseFloat(document.getElementById('dmsLonDeg').value) || 0;
             let lonMin = parseFloat(document.getElementById('dmsLonMin').value) || 0;
+            let lonSec = parseFloat(document.getElementById('dmsLonSec').value) || 0;
             let lonDir = document.getElementById('dmsLonDir').value;
-            let lon = lonDeg + (lonMin / 60);
+            let lon = lonDeg + (lonMin / 60) + (lonSec / 3600);
             if (lonDir === 'W') lon = -lon;
+            
             document.getElementById('onlineLat').value = lat.toFixed(6);
             document.getElementById('onlineLon').value = lon.toFixed(6);
         }
@@ -1615,6 +1641,44 @@ document.addEventListener("DOMContentLoaded", () => {
             if (val > max) val = min;
             if (val < min) val = max;
             e.target.value = String(val).padStart(padding, '0');
+            
+            if (typeof calculateNativeAge === "function") calculateNativeAge();
+        }
+    }
+
+    function calculateNativeAge() {
+        const d = document.getElementById("onDay").value;
+        const m = document.getElementById("onMonth").value;
+        const y = document.getElementById("onYear").value;
+        const ageDisplay = document.getElementById("nativeAgeDisplay");
+        if (!ageDisplay) return;
+
+        if (d && m && y && y.length === 4) {
+            const birthDate = new Date(y, m - 1, d);
+            const today = new Date();
+            
+            if (birthDate > today) {
+                ageDisplay.innerHTML = "Age : &nbsp;Future";
+                return;
+            }
+
+            let years = today.getFullYear() - birthDate.getFullYear();
+            let months = today.getMonth() - birthDate.getMonth();
+            let days = today.getDate() - birthDate.getDate();
+
+            if (days < 0) {
+                months--;
+                days += new Date(today.getFullYear(), today.getMonth(), 0).getDate();
+            }
+
+            if (months < 0) {
+                years--;
+                months += 12;
+            }
+
+            ageDisplay.innerHTML = `Age : &nbsp;${years} years &nbsp;:&nbsp; ${months} months &nbsp;:&nbsp; ${days} days`;
+        } else {
+            ageDisplay.innerHTML = "Age : &nbsp;-- years &nbsp;:&nbsp; -- months &nbsp;:&nbsp; -- days";
         }
     }
 
@@ -1650,6 +1714,7 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("onHour").value = "";
         document.getElementById("onMin").value = "";
         document.getElementById("onSec").value = "00";
+        if (typeof calculateNativeAge === "function") calculateNativeAge();
     }
 
     let wakeInterval = null;
@@ -1858,79 +1923,209 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    function saveCloudProfile() {
-        const name = document.getElementById("onName").value.trim();
-        if (name.length < 2) return;
+    
+	
+	
+	
+		function saveCloudProfile() {
+		const name = document.getElementById("onName").value.trim();
+		if (name.length < 2) return;
 
-        const profileData = {
-            type: "CloudHoroscopeProfile",
-            name: name,
-            date: {
-                d: document.getElementById("onDay").value,
-                m: document.getElementById("onMonth").value,
-                y: document.getElementById("onYear").value
-            },
-            time: {
-                h: document.getElementById("onHour").value,
-                min: document.getElementById("onMin").value,
-                sec: document.getElementById("onSec").value
-             },
-            coords: {
-                lat: document.getElementById("onlineLat").value,
-                lon: document.getElementById("onlineLon").value
-            }
-        };
-        const dataStr = JSON.stringify(profileData, null, 2);
-        const blob = new Blob([dataStr], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
-        const safeName = name.replace(/[^a-z0-9]/gi, '_').toUpperCase();
-        
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `${safeName}.json`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-    }
+		// 1. Ensure the global chart data variable exists before attempting to save
+		if (!window.__lastSwissData) {
+			console.warn("No chart data available to save. Please fetch online first.");
+			return;
+		}
 
-    function loadCloudProfile(event) {
-        const file = event.target.files[0];
-        if (!file) return;
+		// 2. Automatically delete the "Sayana" key to keep the file size lean
+		if (window.__lastSwissData.ayanamshas && window.__lastSwissData.ayanamshas["Sayana"]) {
+			delete window.__lastSwissData.ayanamshas["Sayana"];
+		}
 
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            try {
-                if(typeof clearFetchData === "function") clearFetchData();
-                const data = JSON.parse(e.target.result);
-                if (data.type !== "CloudHoroscopeProfile") return;
+		const profileData = {
+			type: "CloudHoroscopeProfile",
+			name: name,
+			date: {
+				d: document.getElementById("onDay").value,
+				m: document.getElementById("onMonth").value,
+				y: document.getElementById("onYear").value
+			},
+			time: {
+				h: document.getElementById("onHour").value,
+				min: document.getElementById("onMin").value,
+				sec: document.getElementById("onSec").value
+			},
+			coords: {
+				lat: document.getElementById("onlineLat").value,
+				lon: document.getElementById("onlineLon").value
+			},
+			// 3. Embed the entire cleaned raw object directly into the saved payload
+			chartData: window.__lastSwissData
+		};
+		
+		const dataStr = JSON.stringify(profileData, null, 2);
+		const blob = new Blob([dataStr], { type: "application/json" });
+		const url = URL.createObjectURL(blob);
+		const safeName = name.replace(/[^a-z0-9]/gi, '_').toUpperCase();
+		
+		const a = document.createElement("a");
+		a.href = url;
+		a.download = `${safeName}.json`;
+		document.body.appendChild(a);
+		a.click();
+		document.body.removeChild(a);
+		URL.revokeObjectURL(url);
+	}
 
-                document.getElementById("onName").value = data.name || "";
-                if (data.date) {
-                    document.getElementById("onDay").value = data.date.d || "";
-                    document.getElementById("onMonth").value = data.date.m || "";
-                    document.getElementById("onYear").value = data.date.y || "";
-                }
-                if (data.time) {
-                    document.getElementById("onHour").value = data.time.h || "";
-                    document.getElementById("onMin").value = data.time.min || "";
-                    document.getElementById("onSec").value = data.time.sec || "00";
-                }
-                if (data.coords) {
-                    document.getElementById("onlineLat").value = data.coords.lat || "";
-                    document.getElementById("onlineLon").value = data.coords.lon || "";
-                    document.getElementById("locationPreset").value = "manual"; 
-                    syncCoords('dec');
-                }
 
-                setTimeout(() => { if (typeof fetchFromCloud === "function") fetchFromCloud(); }, 300);
-            } catch (error) {
-                console.error("Error parsing profile JSON:", error);
-            }
-        };
-        reader.readAsText(file);
-        event.target.value = '';
-    }
+
+
+
+
+
+
+		function loadCloudProfile(event) {
+		const file = event.target.files[0];
+		if (!file) return;
+
+		const reader = new FileReader();
+		reader.onload = function(e) {
+			try {
+				if (typeof clearFetchData === "function") clearFetchData();
+				const data = JSON.parse(e.target.result);
+				if (data.type !== "CloudHoroscopeProfile") return;
+
+				document.getElementById("onName").value = data.name || "";
+				if (data.date) {
+					document.getElementById("onDay").value = data.date.d || "";
+					document.getElementById("onMonth").value = data.date.m || "";
+					document.getElementById("onYear").value = data.date.y || "";
+				}
+				if (data.time) {
+					document.getElementById("onHour").value = data.time.h || "";
+					document.getElementById("onMin").value = data.time.min || "";
+					document.getElementById("onSec").value = data.time.sec || "00";
+				}
+				if (data.coords) {
+					document.getElementById("onlineLat").value = data.coords.lat || "";
+					document.getElementById("onlineLon").value = data.coords.lon || "";
+					document.getElementById("locationPreset").value = "manual"; 
+					syncCoords('dec');
+				}
+				
+				if (typeof calculateNativeAge === "function") calculateNativeAge();
+
+				// ==========================================
+				// OFFLINE MODE VS LEGACY ONLINE FETCH ROUTER
+				// ==========================================
+				if (data.chartData) {
+					console.log("> Offline Profile Detected: Injecting chart data directly...");
+					
+					// 1. Assign to the global raw variable
+					window.__lastSwissData = data.chartData;
+					window.__planetRetro = data.chartData.planets_retro || data.chartData.ayanamshas?.Lahiri?.planets_retro || {};
+					
+					if (data.chartData.planets) {
+						window.__rawRahuAbs     = data.chartData.planets.Rahu ?? null;
+						window.__rawKetuAbs     = data.chartData.planets.Ketu ?? null;
+						window.__rawRahuTrueAbs = data.chartData.planets.Rahu_true ?? null;
+						window.__rawKetuTrueAbs = data.chartData.planets.Ketu_true ?? null;
+					}
+
+					// 2. Parse Date and Time to establish BTR Engine variables
+					const y = parseInt(data.date.y);
+					const m = parseInt(data.date.m) - 1; 
+					const d = parseInt(data.date.d);
+					const h = parseInt(data.time.h);
+					const min = parseInt(data.time.min);
+					const sec = parseInt(data.time.sec || "0");
+					
+					document.getElementById("personName").value = data.name.toUpperCase();
+					document.getElementById("btr_dd").value = String(d).padStart(2, "0");
+					document.getElementById("btr_mm").value = String(m + 1).padStart(2, "0");
+					document.getElementById("btr_yyyy").value = String(y).padStart(4, "0");
+					document.getElementById("btr_hh").value = String(h).padStart(2, "0");
+					document.getElementById("btr_min").value = String(min).padStart(2, "0");
+					document.getElementById("btr_sec").value = String(sec).padStart(2, "0");
+
+					window.__btrBaseTime = new Date(y, m, d, h, min, sec);
+					window.__btrCurrentTime = new Date(window.__btrBaseTime.getTime());
+					window.__btrReady = true;
+					
+					if (typeof syncMiniBTR === "function") syncMiniBTR();
+
+					// 3. Map degrees dynamically based on the offline file payload
+					if (typeof absToSignDeg === "function") {
+						if (typeof data.chartData.lagna === "number") {
+							let lag = absToSignDeg(data.chartData.lagna);
+							document.getElementById("Lagna_sign").value = lag.sign;
+							document.getElementById("Lagna_deg").value  = lag.deg;
+							document.getElementById("Lagna_min").value  = lag.min;
+							document.getElementById("Lagna_sec").value  = lag.sec;
+						}
+						if (data.chartData.planets) {
+							Object.keys(data.chartData.planets).forEach(p => {
+								if (p === "Rahu" || p === "Ketu" || p.endsWith("_true")) return;
+								if (document.getElementById(p+"_sign") && typeof data.chartData.planets[p] === "number") {
+									let v = absToSignDeg(data.chartData.planets[p]);
+									document.getElementById(p+"_sign").value = v.sign;
+									document.getElementById(p+"_deg").value  = v.deg;
+									document.getElementById(p+"_min").value  = v.min;
+									document.getElementById(p+"_sec").value  = v.sec;
+								}
+							});
+						}
+						
+						let useTrueNode = document.getElementById("trueNodeMode")?.checked || false;
+						let rahuAbs = useTrueNode ? window.__rawRahuTrueAbs : window.__rawRahuAbs;
+						let ketuAbs = useTrueNode ? window.__rawKetuTrueAbs : window.__rawKetuAbs;
+
+						if(rahuAbs != null){
+							let v = absToSignDeg(rahuAbs);
+							document.getElementById("Rahu_sign").value = v.sign;
+							document.getElementById("Rahu_deg").value  = v.deg;
+							document.getElementById("Rahu_min").value  = v.min;
+							document.getElementById("Rahu_sec").value  = v.sec;
+						}
+						if(ketuAbs != null){
+							let v = absToSignDeg(ketuAbs);
+							document.getElementById("Ketu_sign").value = v.sign;
+							document.getElementById("Ketu_deg").value  = v.deg;
+							document.getElementById("Ketu_min").value  = v.min;
+							document.getElementById("Ketu_sec").value  = v.sec;
+						}
+					}
+
+					// 4. Instantly call the main engine calculation functions
+					if (typeof resetUIState === "function") resetUIState();
+					if (typeof redrawAll === "function") redrawAll();
+					if (typeof redrawPLL === "function") redrawPLL();
+					if (typeof lockPlanetInputs_BTR === "function") lockPlanetInputs_BTR(true);
+
+					setTimeout(() => {
+						window.__btrLock = false;
+						if (typeof recomputeFromBTR === "function") recomputeFromBTR();
+					}, 50);
+
+				} else {
+					console.log("> Legacy Profile Detected: No embedded chartData. Waking server...");
+					// Legacy Fallback Mode: Trigger online cloud fetch API
+					setTimeout(() => { if (typeof fetchFromCloud === "function") fetchFromCloud(); }, 300);
+				}
+
+			} catch (error) {
+				console.error("Error parsing profile JSON:", error);
+			}
+		};
+		reader.readAsText(file);
+		event.target.value = '';
+	}
+
+
+
+
+
+
 </script>
 
 
@@ -6326,8 +6521,12 @@ document.getElementById("table4").addEventListener("click", function(){
 
 
 <div style="text-align:center;margin-bottom:14px;font-weight:800">
-  <label>
+  <label style="margin-right: 18px;">
     <input type="checkbox" id="rotateCuspalMode" checked>
+    Rotate As Per Bhavath Bhavam
+  </label>
+  <label>
+    <input type="checkbox" id="rotateNewCuspMode">
     Rotate As Per Cusp
   </label>
 </div>
@@ -6360,8 +6559,12 @@ document.getElementById("table5").addEventListener("click", function(){
 
 
 <div style="text-align:center;margin-bottom:14px;font-weight:800">
-  <label>
+  <label style="margin-right: 18px;">
     <input type="checkbox" id="rotateDynamicCuspalMode" checked>
+    Rotate As Per Bhavath Bhavam
+  </label>
+  <label>
+    <input type="checkbox" id="rotateNewDynamicCuspalMode">
     Rotate As Per Cusp
   </label>
 </div>
@@ -8325,11 +8528,23 @@ function CPR_getAspectedBy(p){
    ========================================================= */
 
 function rotateHouseForCusp(house, cuspNo){
-  if(!document.getElementById("rotateCuspalMode")?.checked){
+  let isBhavath = document.getElementById("rotateCuspalMode")?.checked;
+  let isNewCusp = document.getElementById("rotateNewCuspMode")?.checked;
+
+  if(!isBhavath && !isNewCusp){
     return house;
   }
 
-  let rotated = house + (cuspNo - 1);
+  let rotated = house;
+  
+  // Applies your new Pivot logic (-)
+  if(isNewCusp) {
+    rotated = house - (cuspNo - 1);
+  } 
+  // Applies original forward logic (+)
+  else if(isBhavath) {
+    rotated = house + (cuspNo - 1);
+  }
 
   while(rotated > 12) rotated -= 12;
   while(rotated <= 0) rotated += 12;
@@ -8346,31 +8561,36 @@ function rotateHouseForCusp(house, cuspNo){
 
 
 /* rotate comma-separated numbers */
-function rotateNumberList(text, cuspNo){
+function rotateNumberList(text, cuspNo, isDynamic = false){
   if(!text) return text;
+  const rotateFn = isDynamic ? rotateHouseForDynamicCusp : rotateHouseForCusp;
   return text.split(",")
     .map(x => {
       let n = parseInt(x,10);
-      return isNaN(n) ? x : rotateHouseForCusp(n, cuspNo);
+      return isNaN(n) ? x : rotateFn(n, cuspNo);
     })
     .sort((a,b)=>a-b)
     .join(",");
 }
 
-/* rotate numbers inside Planet(1,2,3) */
-function rotateEmbedded(text, cuspNo){
+/* rotate numbers inside Planet(1,2,3) and Cuspal points */
+function rotateEmbedded(text, cuspNo, isDynamic = false){
   if(!text) return text;
 
+  const rotateFn = isDynamic ? rotateHouseForDynamicCusp : rotateHouseForCusp;
+
   return text.replace(/\(([^)]+)\)/g, (match, nums) => {
-    // 🔥 SAFEGUARD: Skip non-numeric parentheses like (C) or (R)
     if(isNaN(parseInt(nums, 10))) return match;
 
     let rotated =
       nums.split(",")
-          .map(n => rotateHouseForCusp(parseInt(n,10), cuspNo))
+          .map(n => rotateFn(parseInt(n,10), cuspNo))
           .sort((a,b)=>a-b)
           .join(",");
     return `(${rotated})`;
+  }).replace(/\b(\d+)\(C\)/g, (match, num) => {
+    let rotated = rotateFn(parseInt(num,10), cuspNo);
+    return `${rotated}(C)`;
   });
 }
 
@@ -8384,11 +8604,23 @@ function rotateEmbedded(text, cuspNo){
    DYNAMIC CUSPAL ROTATION (TABLE 5 ONLY)
    ========================================================= */
 function rotateHouseForDynamicCusp(house, cuspNo){
-  if(!document.getElementById("rotateDynamicCuspalMode")?.checked){
+  let isBhavath = document.getElementById("rotateDynamicCuspalMode")?.checked;
+  let isNewCusp = document.getElementById("rotateNewDynamicCuspalMode")?.checked;
+
+  if(!isBhavath && !isNewCusp){
     return house;
   }
 
-  let rotated = house + (cuspNo - 1);
+  let rotated = house;
+
+  // Applies your new Pivot logic (-)
+  if(isNewCusp) {
+    rotated = house - (cuspNo - 1);
+  } 
+  // Applies original forward logic (+)
+  else if(isBhavath) {
+    rotated = house + (cuspNo - 1);
+  }
 
   while(rotated > 12) rotated -= 12;
   while(rotated <= 0) rotated += 12;
@@ -8524,6 +8756,7 @@ function buildCuspalPromiseTable(bhava, planet){
 			let sum   = rotateNumberList(CPR_getSummation(actual), bhava);
 
 			let conj  = rotateEmbedded(CPR_getConjunct(actual), bhava);
+			let aspBy = rotateEmbedded(CPR_getAspectedBy(actual), bhava);
 			let asp   = rotateEmbedded(CPR_getAspecting(actual), bhava);
 			let aspH  = rotateNumberList(CPR_getAspectingHouses(actual), bhava);
 
@@ -8534,7 +8767,7 @@ function buildCuspalPromiseTable(bhava, planet){
 			r.insertCell().textContent = hideNumbers ? "" : lords;
 			r.insertCell().textContent = hideNumbers ? "" : sum;
 			r.insertCell().textContent = hideNumbers ? "" : conj;
-			r.insertCell().textContent = hideNumbers ? "" : CPR_getAspectedBy(actual);
+			r.insertCell().textContent = hideNumbers ? "" : aspBy;
 			r.insertCell().textContent = hideNumbers ? "" : aspH;
 			r.insertCell().textContent = hideNumbers ? "" : asp;
 
@@ -8582,8 +8815,17 @@ document.getElementById("kundaliPivot")
 document.getElementById("taraMode")
   ?.addEventListener("change", redrawCuspalPromise);
  
- document.getElementById("rotateCuspalMode")
-  ?.addEventListener("change", redrawCuspalPromise);
+ document.getElementById("rotateCuspalMode")?.addEventListener("change", function(e) {
+  // Turn OFF the other checkbox if this one is turned ON
+  if(e.target.checked) document.getElementById("rotateNewCuspMode").checked = false;
+  redrawCuspalPromise();
+});
+
+document.getElementById("rotateNewCuspMode")?.addEventListener("change", function(e) {
+  // Turn OFF the other checkbox if this one is turned ON
+  if(e.target.checked) document.getElementById("rotateCuspalMode").checked = false;
+  redrawCuspalPromise();
+});
 
 
 </script>
@@ -8754,62 +8996,22 @@ function buildDynamicCuspalPromiseTable(bhava, planet){
     let hideNumbers = isUntenantedMode && isTargetLevel && !hasDollar && !hasPercent;
 
     /* 🔁 INTERNAL ROTATION (AUTO, NO CHECKBOX) */
-  let house = bhava === 1
-  ? CPR_getHouse(actual)
-  : rotateHouseForDynamicCusp(CPR_getHouse(actual), bhava);
-
-let lords = bhava === 1
-  ? CPR_getLords(actual)
-  : rotateNumberList(
-      CPR_getLords(actual)
-        .split(",")
-        .map(x=>rotateHouseForDynamicCusp(+x,bhava))
-        .join(","),
-      1
-    );
-
-let sum = bhava === 1
-  ? CPR_getSummation(actual)
-  : rotateNumberList(
-      CPR_getSummation(actual)
-        .split(",")
-        .map(x=>rotateHouseForDynamicCusp(+x,bhava))
-        .join(","),
-      1
-    );
-
-let conj = bhava === 1
-  ? CPR_getConjunct(actual)
-  : rotateEmbedded(
-      CPR_getConjunct(actual)
-        .replace(/\d+/g,n=>rotateHouseForDynamicCusp(+n,bhava)),
-      1
-    );
-
-let asp = bhava === 1
-  ? CPR_getAspecting(actual)
-  : rotateEmbedded(
-      CPR_getAspecting(actual)
-        .replace(/\d+/g,n=>rotateHouseForDynamicCusp(+n,bhava)),
-      1
-    );
-
-let aspH = bhava === 1
-  ? CPR_getAspectingHouses(actual)
-  : rotateNumberList(
-      CPR_getAspectingHouses(actual)
-        .split(",")
-        .map(x=>rotateHouseForDynamicCusp(+x,bhava))
-        .join(","),
-      1
-    );
+    
+    let house = rotateHouseForDynamicCusp(CPR_getHouse(actual), bhava);
+    let lords = rotateNumberList(CPR_getLords(actual), bhava, true);
+    let sum   = rotateNumberList(CPR_getSummation(actual), bhava, true);
+    
+    let conj  = rotateEmbedded(CPR_getConjunct(actual), bhava, true);
+    let aspBy = rotateEmbedded(CPR_getAspectedBy(actual), bhava, true); 
+    let asp   = rotateEmbedded(CPR_getAspecting(actual), bhava, true);
+    let aspH  = rotateNumberList(CPR_getAspectingHouses(actual), bhava, true);
 
     r.insertCell().textContent = hideNumbers ? "" : getTaraLabel(actual, planet);
     r.insertCell().textContent = hideNumbers ? "" : house;
     r.insertCell().textContent = hideNumbers ? "" : lords;
     r.insertCell().textContent = hideNumbers ? "" : sum;
     r.insertCell().textContent = hideNumbers ? "" : conj;
-    r.insertCell().textContent = hideNumbers ? "" : CPR_getAspectedBy(actual);
+    r.insertCell().textContent = hideNumbers ? "" : aspBy; 
     r.insertCell().textContent = hideNumbers ? "" : aspH;
     r.insertCell().textContent = hideNumbers ? "" : asp;
   });
@@ -8849,8 +9051,17 @@ setTimeout(buildDynamicCuspalPromiseReader, 0);
 
 
 
-document.getElementById("rotateDynamicCuspalMode")
-  ?.addEventListener("change", buildDynamicCuspalPromiseReader);
+document.getElementById("rotateDynamicCuspalMode")?.addEventListener("change", function(e) {
+  // Turn OFF the other checkbox if this one is turned ON
+  if(e.target.checked) document.getElementById("rotateNewDynamicCuspalMode").checked = false;
+  buildDynamicCuspalPromiseReader();
+});
+  
+document.getElementById("rotateNewDynamicCuspalMode")?.addEventListener("change", function(e) {
+  // Turn OFF the other checkbox if this one is turned ON
+  if(e.target.checked) document.getElementById("rotateDynamicCuspalMode").checked = false;
+  buildDynamicCuspalPromiseReader();
+});
   
 </script>
 
