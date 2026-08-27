@@ -1103,10 +1103,10 @@ tr.selectedRow[data-color="bloodred"] td {
     <input type="checkbox" id="sign2signMode_top"> Sign
   </label>
   <label style="color:#ecfdf5; font-size:13px; font-weight:800; cursor:pointer; display:flex; align-items:center; gap:4px; margin-right:4px;" title="Original Lagna Mode">
-    <input type="checkbox" id="originalLagnaMode_top"> Origin
+    <input type="checkbox" id="originalLagnaMode_top" checked> Origin
   </label>
   <label style="color:#ecfdf5; font-size:13px; font-weight:800; cursor:pointer; display:flex; align-items:center; gap:4px; margin-right:4px;">
-    <input type="checkbox" id="trueNodeMode_top" checked> True
+    <input type="checkbox" id="trueNodeMode_top"> True
   </label>
   <label style="color:#facc15; font-size:13px; font-weight:800; cursor:pointer; display:flex; align-items:center; gap:4px; margin-right:4px;" title="Sign-to-Sign Aspects">
     <input type="checkbox" id="s2sAspectsMode_top" checked> S2S Asp
@@ -2473,8 +2473,8 @@ function resetUIState() {
   // 1. Reset Checkboxes to Initial HTML Defaults
   const checks = {
     ignoreMin: true, ignoreSec: true, hideInputTable: true,
-    levelThemeToggle: true, originalLagnaMode: false, showCuspMode: false,
-    westAspMode: true, trueNodeMode: true, rotateCuspalMode: true,
+    levelThemeToggle: true, originalLagnaMode: true, showCuspMode: false,
+    westAspMode: true, trueNodeMode: false, rotateCuspalMode: true,
     rotateDynamicCuspalMode: true, modeDateHide: true, modeKN: true,
     removeOccupiedToggle: true, // 🔥 Forces Occupied to be ON by default upon load/reset
     untenantedToggle: false, // 🔥 Untenanted defaults to OFF
@@ -2526,7 +2526,7 @@ function resetUIState() {
     }
   }
   
-  if(typeof USE_TRUE_NODE !== "undefined") USE_TRUE_NODE = true;
+  if(typeof USE_TRUE_NODE !== "undefined") USE_TRUE_NODE = false;
 }
 
 function loadJSON(){
@@ -2674,7 +2674,7 @@ function applyLevelTheme(){
 	</select>
 
     <label style="cursor:pointer; display:flex; align-items:center; gap:4px; margin-left:8px; color:#facc15;">
-      <input type="checkbox" id="originalLagnaMode">
+      <input type="checkbox" id="originalLagnaMode" checked>
       Original
     </label>
 
@@ -2718,7 +2718,7 @@ function applyLevelTheme(){
     </label>
 
     <label>
-      <input type="checkbox" id="trueNodeMode" checked>
+      <input type="checkbox" id="trueNodeMode">
       True Node
     </label>
 
@@ -3870,7 +3870,7 @@ function initSIKundali(){
 
 function formatDegMinSec(abs){
 
-  abs = ((abs % 360) + 360) % 360;
+  abs = parseFloat((((abs % 360) + 360) % 360).toFixed(6));
 
   let degFloat = abs % 30;
   let deg = Math.floor(degFloat);
@@ -3880,6 +3880,7 @@ function formatDegMinSec(abs){
 
   if(sec === 60){ sec = 0; min++; }
   if(min === 60){ min = 0; deg++; }
+  if(deg === 30){ deg = 0; } // Caps formatting safely
 
   return `${deg}°${String(min).padStart(2,"0")}′${String(sec).padStart(2,"0")}″`;
 }
@@ -3924,17 +3925,13 @@ function getAbsDeg(entity){
         pivot = pivot.split("_")[0];
         
         let pivotAbs = getAbsDeg(pivot);
-        if (pivotAbs !== null) {
-            let n = parseInt(entity, 10);
-            let pivotDeg = pivotAbs % 30;
-            let isOrig = document.getElementById("originalLagnaMode")?.checked;
-            
-            // Retain exact degree, but shift +30° if "Original" is unchecked and degree >= 15
-            let shift = (!isOrig && pivotDeg >= 15) ? 30 : 0;
-            let cusp1 = (pivotAbs + shift + 360) % 360;
-            
-            return (cusp1 + (n - 1) * 30) % 360;
-        }
+            if (pivotAbs !== null) {
+                let n = parseInt(entity, 10);
+                
+                // For true 30-degree equal divisions from the pivot, no shift is applied.
+                // The pivot's exact degree becomes Cusp 1 (0° of the 1st house).
+                return (pivotAbs + (n - 1) * 30) % 360;
+            }
     }
 
     // STANDARD: TRUE CUSPS FROM SWISS
@@ -3947,6 +3944,11 @@ function getAbsDeg(entity){
 
     return ((abs % 360) + 360) % 360;
   }
+  
+  
+  
+  
+  
 
   /* =========================
      3️⃣ TRUE / MEAN NODE (RAW)
@@ -4311,21 +4313,29 @@ let buckets = {};
   let rawAbs = getAbsDeg(label);
   if(rawAbs === null) return;
 
-  // Shifted absolute calculates the relative movement (0° for KP, 15° for Vedic)
   let shiftedAbs = rawAbs + offset;
-  shiftedAbs = ((shiftedAbs % 360) + 360) % 360;
+  shiftedAbs = parseFloat((((shiftedAbs % 360) + 360) % 360).toFixed(6)); 
 
-  // 🔥 TRUE HOUSE BINNING
-  let houseNum = getHouseFromPivot(label);
-  let signIndex = (baseSignIndex + houseNum - 1) % 12;
-  let sign = signs[signIndex + 1];
-  if(!sign) return;
+  let sign;
+  let signIndex;
+  let isKP = document.getElementById("kpMode")?.checked;
+  let isEqual = document.getElementById("equalHouseMode")?.checked;
+  let isPlanetPivot = !pivot.endsWith("CSL") && pivot !== "Lagna";
 
-  if(!buckets[sign]){
-    buckets[sign] = [];
+  // 🔥 BUG FIX: True Bhava Chalit placement for KP Unequal Houses
+  // If KP mode, unequal houses, and Pivot is Lagna/CSL -> bin by true House instead of raw degree
+  if (isKP && !isEqual && !isPlanetPivot) {
+      let trueHouse = getHouseFromPivot(label);
+      signIndex = (baseSignIndex + trueHouse - 1) % 12;
+      sign = ZODIAC_ORDER[signIndex];
+  } else {
+      signIndex = Math.floor(shiftedAbs / 30);
+      sign = signs[signIndex + 1];
   }
 
-  // 🔥 RESTORED: Use shiftedAbs so the printed text actually changes to 0° / 15°
+  if(!sign) return;
+  if(!buckets[sign]) buckets[sign] = [];
+
   let fullDeg = shiftedAbs % 30;
   let deg = Math.floor(fullDeg);
   let min = Math.floor((fullDeg - deg) * 60);
@@ -4346,9 +4356,7 @@ if(document.getElementById("showCuspMode").checked){
       let abs = getAbsDeg(c + "CSL");
       if (typeof abs !== "number") continue;
 
-      /* 🔁 CSL ROTATION */
       let displayC = c;
-
       if(pivot.endsWith("CSL")){
         let pivotC = parseInt(pivot,10);
         displayC = c - pivotC + 1;
@@ -4356,30 +4364,37 @@ if(document.getElementById("showCuspMode").checked){
         if(displayC > 12) displayC -= 12;
       }
 
-      // Shifted absolute calculates the relative movement
       let shiftedAbs = abs + offset;
       shiftedAbs = ((shiftedAbs % 360) + 360) % 360;
 
-      // 🔥 TRUE HOUSE BINNING
-      let houseNum = displayC;
-      let signIndex = (baseSignIndex + houseNum - 1) % 12;
-      let sign = signs[signIndex + 1];
-      if(!sign) continue;
+      let sign;
+      let signIndex;
+      let isKP = document.getElementById("kpMode")?.checked;
+      let isEqual = document.getElementById("equalHouseMode")?.checked;
+      let isPlanetPivot = !pivot.endsWith("CSL") && pivot !== "Lagna";
 
+      // 🔥 BUG FIX: True Bhava Chalit placement for Cusps
+      if (isKP && !isEqual && !isPlanetPivot) {
+          let trueHouse = displayC; 
+          signIndex = (baseSignIndex + trueHouse - 1) % 12;
+          sign = ZODIAC_ORDER[signIndex];
+      } else {
+          signIndex = Math.floor(shiftedAbs / 30);
+          sign = signs[signIndex + 1];
+      }
+
+      if(!sign) continue;
       if(!buckets[sign]) buckets[sign] = [];
 
-      /* prevent duplicate */
-      if(
-        !buckets[sign].some(x => x.type === "cusp" && x.label === `${displayC}C`)
-      ){
+      if(!buckets[sign].some(x => x.type === "cusp" && x.label === `${displayC}C`)){
         buckets[sign].push({
           type: "cusp",
           label: `${displayC}C`,
-          deg: shiftedAbs % 30, // 🔥 RESTORED
+          deg: shiftedAbs % 30,
           exactDeg: shiftedAbs,
           abs: abs,
           signIndex,
-          text: `${displayC}C ${formatDegMinSec(shiftedAbs)}` // 🔥 RESTORED
+          text: `${displayC}C ${formatDegMinSec(shiftedAbs)}`
         });
       }
     }
@@ -4960,58 +4975,12 @@ function buildRahuKetuPivotTable(){
 
 
 
-/* -------- KP MODE (TRUE CUSPS OR EQUAL) -------- */
+/* -------- KP MODE (0° PIVOT = EXACT 30° SLICES) -------- */
     else if(kpMode.checked){
-      let cusps = [];
-      for(let i=1; i<=12; i++) {
-          let cAbs = getAbsDeg(i + "CSL");
-          if(cAbs !== null) {
-              cusps.push({ house: i, abs: ((cAbs % 360) + 360) % 360 });
-          }
-      }
-      if (cusps.length === 12) {
-          cusps.sort((a,b) => a.abs - b.abs);
-          let getHouseOfDeg = (deg) => {
-              for(let i=0; i<12; i++) {
-                  let c1 = cusps[i].abs;
-                  let c2 = cusps[(i+1)%12].abs;
-                  let h = cusps[i].house;
-                  if(c1 < c2) {
-                      if(deg >= c1 && deg < c2) return h;
-                  } else {
-                      if(deg >= c1 || deg < c2) return h;
-                  }
-              }
-              return 1;
-          };
-          
-          let pCuspHouse = getHouseOfDeg(nodeAbs); // Node acts as pivot
-          let eCuspHouse = getHouseOfDeg(dispAbs); // Dispositor is the entity
-          fromNode = eCuspHouse - pCuspHouse + 1;
-          if(fromNode <= 0) fromNode += 12;
-      } else {
-          // Fallback
-          let pivotDeg = nodeAbs % 30;
-          let isOrig = document.getElementById("originalLagnaMode")?.checked;
-          
-          let shift = (!isOrig && pivotDeg >= 15) ? 30 : 0;
-          let p = (nodeAbs + shift + 360) % 360;
-
-          if (document.getElementById("equalHouseMode")?.checked) {
-              let diff = dispAbs - p;
-              if(diff < 0) diff += 360;
-              fromNode = Math.floor(diff / 30) + 1;
-              if(fromNode > 12) fromNode -= 12;
-          } else {
-              let offset = (!isOrig && pivotDeg >= 15) ? (30 - pivotDeg) : -pivotDeg;
-              let pSign0 = (nodeAbs + offset + 360) % 360;
-              let eSign0 = (dispAbs + offset + 360) % 360;
-              let diff = eSign0 - pSign0;
-              if(diff < 0) diff += 360;
-              fromNode = Math.floor(diff / 30) + 1;
-              if(fromNode > 12) fromNode -= 12;
-          }
-      }
+      let diff = dispAbs - nodeAbs;
+      if(diff < 0) diff += 360;
+      fromNode = Math.floor(diff / 30) + 1;
+      if(fromNode > 12) fromNode -= 12;
     }
 	
 	
@@ -5107,73 +5076,52 @@ function getHouseFromPivot(entity){
   }
 
   /* =========================================
-     MODE 2 : KP (TRUE CUSPS OR EQUAL)
+     MODE 2 : KP (0° PIVOT = EXACT 30° SLICES OR UNEQUAL CUSPS)
      ========================================= */
   if(kpMode.checked){
-    let cusps = [];
-    for(let i=1; i<=12; i++) {
-        let cAbs = getAbsDeg(i + "CSL"); // This now fetches True or Equal cusps accurately
-        if(cAbs !== null) {
-            cusps.push({ house: i, abs: ((cAbs % 360) + 360) % 360 });
-        }
-    }
+    let isEqual = document.getElementById("equalHouseMode")?.checked;
+    let isPlanetPivot = !pivotRaw.endsWith("CSL") && pivot !== "Lagna";
     
-    if (cusps.length === 12) {
-        cusps.sort((a,b) => a.abs - b.abs);
-        
-        let getHouseOfDeg = (deg) => {
-            for(let i=0; i<12; i++) {
-                let c1 = cusps[i].abs;
-                let c2 = cusps[(i+1)%12].abs;
-                let h = cusps[i].house;
-                
-                if(c1 < c2) {
-                    if(deg >= c1 && deg < c2) return h;
-                } else {
-                    if(deg >= c1 || deg < c2) return h;
-                }
-            }
-            return 1;
-        };
-        
-        let pCuspHouse = 1;
-        if (pivot.endsWith("CSL")) {
-            pCuspHouse = parseInt(pivot, 10);
-        } else {
-            pCuspHouse = getHouseOfDeg(pivotAbs);
-        }
-        let eCuspHouse = getHouseOfDeg(entAbs);
-        
-        let house = eCuspHouse - pCuspHouse + 1;
-        if(house <= 0) house += 12;
+    // 1️⃣ Equal Slices (If Planet Pivot OR Equal Mode is ON)
+    if (isPlanetPivot || isEqual) {
+        let diff = entAbs - pivotAbs;
+        if(diff < 0) diff += 360;
+        diff = parseFloat(diff.toFixed(6));
+        let house = Math.floor(diff / 30) + 1;
+        if(house > 12) house -= 12;
         return house;
-
-    } else {
-        // FALLBACK: IF CUSPS FAIL TO GENERATE
-        let pivotDeg = pivotAbs % 30;
-        let isOrig = document.getElementById("originalLagnaMode")?.checked;
-        
-        let shift = (!isOrig && pivotDeg >= 15) ? 30 : 0;
-        let p = (pivotAbs + shift + 360) % 360;
-
-        if (document.getElementById("equalHouseMode")?.checked) {
-            let diff = entAbs - p;
-            if(diff < 0) diff += 360;
-            let house = Math.floor(diff / 30) + 1;
-            if(house > 12) house -= 12;
-            return house;
-        } else {
-            let offset = (!isOrig && pivotDeg >= 15) ? (30 - pivotDeg) : -pivotDeg;
-            let pSign0 = (pivotAbs + offset + 360) % 360;
-            let eSign0 = (entAbs   + offset + 360) % 360;
-
-            let diff = eSign0 - pSign0;
-            if(diff < 0) diff += 360;
-
-            let house = Math.floor(diff / 30) + 1;
-            if(house > 12) house -= 12;
-            return house;
+    } 
+    // 2️⃣ True Unequal Cusps (For Lagna & CSLs)
+    else {
+        let cusps = [];
+        for(let i = 1; i <= 12; i++){
+            let cAbs = getAbsDeg(i + "CSL");
+            if (cAbs === null) return 1;
+            cusps.push({ house: i, abs: cAbs });
         }
+        
+        entAbs = parseFloat(entAbs.toFixed(6)); // Float fix for safety
+        
+        for(let i = 0; i < 12; i++){
+            let curr = parseFloat(cusps[i].abs.toFixed(6));
+            let next = parseFloat(cusps[(i + 1) % 12].abs.toFixed(6));
+            
+            let isInside = false;
+            if (curr < next) {
+                if (entAbs >= curr && entAbs < next) isInside = true;
+            } else { // Wraps over 0 degrees (Pisces to Aries)
+                if (entAbs >= curr || entAbs < next) isInside = true;
+            }
+            
+            if (isInside) {
+                let absHouse = cusps[i].house;
+                let pivotHouse = pivotRaw.endsWith("CSL") ? parseInt(pivotRaw, 10) : 1;
+                let relativeHouse = absHouse - pivotHouse + 1;
+                if (relativeHouse <= 0) relativeHouse += 12;
+                return relativeHouse;
+            }
+        }
+        return 1;
     }
   }
 
@@ -5186,7 +5134,7 @@ function getHouseFromPivot(entity){
 
     let diff = entAbs - bhavaStart;
     diff = ((diff % 360) + 360) % 360;
-
+    diff = parseFloat(diff.toFixed(6)); // 🔥 Fix floating point drift
     let house = Math.floor(diff / 30) + 1;
     if(house > 12) house -= 12;
     return house;
@@ -6051,71 +5999,54 @@ function getPlanetState(planet){
   }
 
   /* =========================================
-     MODE 2 : KP (TRUE CUSPS OR EQUAL)
+     MODE 2 : KP (0° PIVOT = EXACT 30° SLICES OR UNEQUAL CUSPS)
      ========================================= */
   if(kpMode.checked){
-    let cusps = [];
-    for(let i=1; i<=12; i++) {
-        let cAbs = getAbsDeg(i + "CSL");
-        if(cAbs !== null) {
-            cusps.push({ house: i, abs: ((cAbs % 360) + 360) % 360 });
-        }
-    }
+    let isEqual = document.getElementById("equalHouseMode")?.checked;
+    let isPlanetPivot = !pivotRaw.endsWith("CSL") && pivot !== "Lagna";
     
-    if (cusps.length === 12) {
-        cusps.sort((a,b) => a.abs - b.abs);
-        
-        let getHouseOfDeg = (deg) => {
-            for(let i=0; i<12; i++) {
-                let c1 = cusps[i].abs;
-                let c2 = cusps[(i+1)%12].abs;
-                let h = cusps[i].house;
-                
-                if(c1 < c2) {
-                    if(deg >= c1 && deg < c2) return h;
-                } else {
-                    if(deg >= c1 || deg < c2) return h;
-                }
-            }
-            return 1;
-        };
-        
-        let pCuspHouse = 1;
-        if (pivot.endsWith("CSL")) {
-            pCuspHouse = parseInt(pivot, 10);
-        } else {
-            pCuspHouse = getHouseOfDeg(pivotAbs);
-        }
-        let eCuspHouse = getHouseOfDeg(entAbs);
-        
-        // Backward math
-        let house = pCuspHouse - eCuspHouse + 1;
-        if(house <= 0) house += 12;
+    // 1️⃣ Equal Slices (If Planet Pivot OR Equal Mode is ON)
+    if (isPlanetPivot || isEqual) {
+        let diff = pivotAbs - entAbs;
+        if(diff < 0) diff += 360;
+        diff = parseFloat(diff.toFixed(6));
+        let house = Math.floor(diff / 30) + 1;
+        if(house > 12) house -= 12;
         return house;
-    } else {
-        // FALLBACK IF CUSPS FAIL
-        let pivotDeg = pivotAbs % 30;
-        let isOrig = document.getElementById("originalLagnaMode")?.checked;
-        
-        let shift = (!isOrig && pivotDeg >= 15) ? 30 : 0;
-        let p = (pivotAbs + shift + 360) % 360;
-
-        if (document.getElementById("equalHouseMode")?.checked) {
-            let diff = p - entAbs;
-            if(diff < 0) diff += 360;
-            let house = Math.floor(diff / 30) + 1;
-            if(house > 12) house -= 12;
-            return house;
-        } else {
-            let offset = (!isOrig && pivotDeg >= 15) ? (30 - pivotDeg) : -pivotDeg;
-            let pSign0 = (pivotAbs + offset + 360) % 360;
-            let eSign0 = (entAbs   + offset + 360) % 360;
-            let diff = pSign0 - eSign0;
-            if(diff < 0) diff += 360;
-            let house = Math.floor(diff / 30) + 1;
-            if(house > 12) house -= 12;
-            return house;
+    } 
+    // 2️⃣ True Unequal Cusps (For Lagna & CSLs) - Retro Direction
+    else {
+        let cusps = [];
+        for(let i = 1; i <= 12; i++){
+            let cAbs = getAbsDeg(i + "CSL");
+            if (cAbs === null) return 1;
+            cusps.push({ house: i, abs: cAbs });
         }
+        
+        entAbs = parseFloat(entAbs.toFixed(6));
+        
+        for(let i = 0; i < 12; i++){
+            let curr = parseFloat(cusps[i].abs.toFixed(6));
+            let next = parseFloat(cusps[(i + 1) % 12].abs.toFixed(6));
+            
+            let isInside = false;
+            if (curr < next) {
+                if (entAbs >= curr && entAbs < next) isInside = true;
+            } else {
+                if (entAbs >= curr || entAbs < next) isInside = true;
+            }
+            
+            if (isInside) {
+                let absHouse = cusps[i].house;
+                let pivotHouse = pivotRaw.endsWith("CSL") ? parseInt(pivotRaw, 10) : 1;
+                
+                // For Retro, the distance is calculated backwards
+                let relativeHouse = pivotHouse - absHouse + 1;
+                if (relativeHouse <= 0) relativeHouse += 12;
+                return relativeHouse;
+            }
+        }
+        return 1;
     }
   }
 
@@ -6125,7 +6056,7 @@ function getPlanetState(planet){
   if(vedicMode.checked){
     let diff = pivotAbs - entAbs;
     if(diff < 0) diff += 360;
-
+    diff = parseFloat(diff.toFixed(6)); // 🔥 Fix floating point drift
     let house = Math.floor(diff / 30) + 1;
     if(house > 12) house -= 12;
 
@@ -8053,7 +7984,8 @@ document.getElementById("kundaliPivot")
    ========================================================= */
 
 function absToSignDeg(abs){
-  abs = ((abs % 360) + 360) % 360;
+  // Fix floating point jitter at the source
+  abs = parseFloat((((abs % 360) + 360) % 360).toFixed(6));
 
   let signIndex = Math.floor(abs / 30); // 0–11
   let degFloat = abs % 30;
@@ -8065,6 +7997,7 @@ function absToSignDeg(abs){
 
   if(sec === 60){ sec = 0; min++; }
   if(min === 60){ min = 0; deg++; }
+  if(deg === 30){ deg = 0; signIndex = (signIndex + 1) % 12; } // Wraps 30° to 0° of next sign
 
   return {
     sign: signs[signIndex + 1],
